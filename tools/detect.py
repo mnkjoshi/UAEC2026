@@ -2,7 +2,7 @@
 """
 Battery Detection Engine
 
-for use: python tools/detect.py public/scenarios/normal.csv
+for use: python tools/detect.py public/scenarios/normal.csv [--json]
 """
 import argparse
 import csv
@@ -16,10 +16,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+# paths
 ROOT = Path(__file__).resolve().parent.parent
 SCENARIOS_DIR = ROOT / "public" / "scenarios"
 MANIFEST_PATH = SCENARIOS_DIR / "index.json"
 
+# rankings for severity
 SEVERITY_ORDER: Dict[str, int] = {
     "normal": 0,
     "advisory": 1,
@@ -28,15 +30,16 @@ SEVERITY_ORDER: Dict[str, int] = {
     "critical": 4,
 }
 
+# default thresholds and tuning parameters
 DEFAULT_CONFIG: Dict[str, Any] = {
     "expected_module_count": 12,
     "ingestion": {
-        "max_gap_multiplier": 3.0,
+        "max_gap_multiplier": 3.0, # gap variable
     },
     "integrity": {
-        "stuck_temp_consecutive_samples": 6,
+        "stuck_temp_consecutive_samples": 6, # reptation for frozen variables
         "stuck_volt_consecutive_samples": 9,
-        "temp_min_c": -40.0,
+        "temp_min_c": -40.0, # physical bounds
         "temp_max_c": 150.0,
         "volt_min_v": 0.0,
         "volt_max_v": 5.0,
@@ -45,12 +48,12 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "soh_min_pct": 0.0,
         "soh_max_pct": 100.0,
         "current_abs_max_a": 1000.0,
-        "impossible_temp_jump_c": 10.0,
+        "impossible_temp_jump_c": 10.0, # step thresholds
         "impossible_volt_jump_v": 0.5,
         "spike_return_window_samples": 2,
     },
     "absolute_limits": {
-        "temp_warning_c": 45.0,
+        "temp_warning_c": 45.0, # warining limit variables
         "temp_critical_c": 55.0,
         "temp_nominal_c": 30.0,
         "volt_low_warning_v": 3.4,
@@ -64,18 +67,18 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "soh_warning_pct": 80.0,
         "soh_critical_pct": 70.0,
         "soh_nominal_pct": 95.0,
-        "current_warning_multiplier": 1.5,
+        "current_warning_multiplier": 1.5, # current limits evaluated as multiples of the rolling pack current median
         "current_critical_multiplier": 2.0,
         "current_rolling_window_seconds": 60.0,
     },
     "relative_limits": {
-        "temp_above_median_warning_c": 5.0,
+        "temp_above_median_warning_c": 5.0, # peer-comparison limits against the instantaneous pack median across healthy modules
         "temp_above_median_critical_c": 10.0,
         "volt_deviation_warning_v": 0.03,
         "volt_deviation_critical_v": 0.10,
     },
     "rate_limits": {
-        "window_seconds": 30.0,
+        "window_seconds": 30.0, # trailing window and slope limits for rapid thermal rise or voltage sag
         "min_samples": 3,
         "temp_rise_warning_c_per_min": 2.0,
         "temp_rise_critical_c_per_min": 4.0,
@@ -83,23 +86,24 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "volt_drop_critical_v_per_min": 0.10,
     },
     "forecast": {
-        "min_window_seconds": 30.0,
+        "min_window_seconds": 30.0, # linear extrapolation bounds
         "max_window_seconds": 60.0,
         "max_horizon_seconds": 3600.0,
     },
     "diagnosis": {
-        "whole_pack_fraction_threshold": 0.5,
+        "whole_pack_fraction_threshold": 0.5, # fraction of modules for pack-wide diagnoses
         "pack_comms_loss_fraction_threshold": 0.5,
     },
     "lifecycle": {
-        "persistence_warning_samples": 3,
+        "persistence_warning_samples": 3, # amount of faults required before alert
         "persistence_critical_samples": 2,
         "persistence_data_fault_samples": 2,
-        "hysteresis_clear_margin_fraction": 0.8,
+        "hysteresis_clear_margin_fraction": 0.8, # hysteresis band and consecutive clean samples required to clear an active alert
         "hysteresis_clear_samples": 3,
     },
 }
 
+# normalized CSV column header aliases mapping
 HEADER_ALIASES: Dict[str, List[str]] = {
     "timestamp": ["timestamp", "time", "datetime", "date", "ts", "recordedat"],
     "moduleId": ["moduleid", "module", "mod", "cellid", "unitid", "id"],
@@ -111,6 +115,7 @@ HEADER_ALIASES: Dict[str, List[str]] = {
     "sensorStatus": ["sensorstatus", "status", "healthstatus", "state", "sensorstate"],
 }
 
+# all "missing" values
 MISSING_TOKENS: Set[str] = {
     "",
     "nan",
@@ -126,6 +131,7 @@ MISSING_TOKENS: Set[str] = {
     "--",
 }
 
+# physical battery hazard rules
 HAZARD_RULES: Set[str] = {
     "isolated_thermal_event",
     "adjacent_thermal_propagation",
@@ -138,6 +144,7 @@ HAZARD_RULES: Set[str] = {
     "overcurrent_event",
 }
 
+# maps a narrower rule to broader rules that supersede it
 SUPERSEDING_RULES: Dict[str, Set[str]] = {
     "isolated_thermal_event": {
         "adjacent_thermal_propagation",
@@ -152,6 +159,7 @@ SUPERSEDING_RULES: Dict[str, Set[str]] = {
     },
 }
 
+# signal codes that must recover before an alert clears
 RELEVANT_CODES: Dict[str, List[str]] = {
     "isolated_thermal_event": ["abs_temp_high", "rel_temp_high", "rate_temp_rise"],
     "adjacent_thermal_propagation": ["abs_temp_high", "rel_temp_high", "rate_temp_rise"],
@@ -171,7 +179,7 @@ RELEVANT_CODES: Dict[str, List[str]] = {
     "overcurrent_event": ["rel_current_high"],
 }
 
-
+# functions to parse, clean and sort required data
 def normalize_header_key(raw: str) -> str:
     return re.sub(r"[^a-z0-9]", "", raw.lstrip("\ufeff").strip().lower())
 
@@ -229,6 +237,7 @@ def worst_severity(levels: List[str]) -> str:
 
 
 def ols_slope_per_min(
+    """ project the trajectory until the limits are reached """
     points: List[Tuple[float, float]],
     current_sec: float,
     window_sec: float,
@@ -278,6 +287,7 @@ def build_forecast(
 
 
 class DetectionEngine:
+    """ detection engine that ingests CSV and runs causal fault analysis """
     def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         self.config = deepcopy(DEFAULT_CONFIG)
         if config:
@@ -288,6 +298,7 @@ class DetectionEngine:
                     self.config[k] = v
 
     def ingest_csv(self, csv_text: str) -> Dict[str, Any]:
+        """ processes the CSV files """
         text = csv_text.lstrip("\ufeff")
         lines = [line for line in text.splitlines() if line.strip()]
         if not lines:
@@ -298,6 +309,7 @@ class DetectionEngine:
         col_idx: Dict[str, int] = {}
         mapped_aliases = 0
 
+        # match CSV columns to known header aliases
         for idx, h in enumerate(raw_headers):
             norm = normalize_header_key(h)
             for field_name, aliases in HEADER_ALIASES.items():
@@ -327,6 +339,7 @@ class DetectionEngine:
             i = col_idx.get(f)
             return r[i] if (i is not None and i < len(r)) else ""
 
+        # parse and validate individual rows
         for row_num, raw_row in enumerate(records[1:], start=2):
             raw_ts = get_cell(raw_row, "timestamp")
             mod_id = get_cell(raw_row, "moduleId").strip()
@@ -370,6 +383,7 @@ class DetectionEngine:
                 continue
             seen_keys.add(key)
 
+            # amount of out of order rows 
             if ts_ms < prev_ms:
                 ooo_count += 1
             else:
@@ -416,7 +430,7 @@ class DetectionEngine:
 
         if not accepted:
             raise ValueError("CSV contains no rows with valid timestamps and module IDs.")
-
+        # sort chronologically
         accepted.sort(key=lambda r: (r["timestampMs"], module_sort_key(r["moduleId"])))
         module_ids = sorted({r["moduleId"] for r in accepted}, key=module_sort_key)
 
@@ -440,6 +454,7 @@ class DetectionEngine:
         missing_mod_ticks = 0
         t0 = sorted_ts[0]
 
+        # aligned tick frames to detect sampling gaps or missing data
         for idx, ts_ms in enumerate(sorted_ts):
             entry = tick_map[ts_ms]
             prev_ms = sorted_ts[idx - 1] if idx > 0 else ts_ms
@@ -490,6 +505,10 @@ class DetectionEngine:
         }
 
     def run_all(self, csv_text: str) -> Dict[str, Any]:
+        """ 
+        run the full detection pipeline
+        main features: Sensor integrity filtering, Signal extraction, Causal diagnosis and Alert lifecycle state machine
+        """
         ingested = self.ingest_csv(csv_text)
         ticks = ingested["ticks"]
         module_ids = ingested["moduleIds"]
