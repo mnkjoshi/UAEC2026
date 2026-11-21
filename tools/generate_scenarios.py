@@ -16,6 +16,7 @@ Standard library only; no installs needed. Works on Python 3.9+.
 import csv
 import json
 import random
+import copy
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, List
