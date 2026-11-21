@@ -1,7 +1,9 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
-// https://vite.dev/config/
+// Relative base so the built app works from any path (GitHub Pages, file server, subfolder).
 export default defineConfig({
+  base: './',
   plugins: [react()],
-})
+  build: { chunkSizeWarningLimit: 1200 },
+});

@@ -1,29 +1,36 @@
-import type { Severity } from '../../core/types';
+import type { ModuleState } from '../../core';
+import { fmt } from '../format';
+import { StatusBadge } from './StatusBadge';
 
-export interface ModuleTileProps {
-  id: string; // "M07"
-  temperature: number | null; // null = sensor missing
-  voltage: number | null;
-  soc: number | null;
-  severity: Severity;
-  label?: string; // short reason, e.g. "Rising 7.5 °C/min"
-  selected?: boolean;
-  onClick?: () => void;
+interface ModuleTileProps {
+  module: ModuleState;
+  selected: boolean;
+  onSelect: (id: string) => void;
 }
 
-/**
- * One battery module on the pack map.
- *
- * TODO(Elijah): this is a bare placeholder. See elijah/TASK.md for what it should look like.
- */
-export function ModuleTile({ id, temperature, voltage, severity, label, onClick }: ModuleTileProps) {
+/** One battery module on the pack map: ID, key readings, severity and the reason for it. */
+export function ModuleTile({ module: m, selected, onSelect }: ModuleTileProps) {
   return (
-    <button type="button" onClick={onClick} style={{ border: '1px solid #888', padding: 8, textAlign: 'left' }}>
-      <strong>{id}</strong>
-      <div>{temperature ?? '—'} °C</div>
-      <div>{voltage ?? '—'} V</div>
-      <div>{severity}</div>
-      {label && <small>{label}</small>}
+    <button
+      type="button"
+      className={`tile sev-${m.severity}${selected ? ' selected' : ''}`}
+      onClick={() => onSelect(m.id)}
+      aria-pressed={selected}
+      aria-label={`${m.id}: ${m.severity.replace('_', ' ')}${m.label ? `, ${m.label}` : ''}`}
+    >
+      <div className="tile-head">
+        <span className="tile-id">{m.id}</span>
+        <StatusBadge severity={m.severity} compact />
+      </div>
+      <div className="tile-temp">{fmt(m.temperature, 1)}<small>°C</small></div>
+      <div className="tile-volt">{fmt(m.voltage, 3)}<small>V</small></div>
+      <div className="tile-soc">
+        <div className="soc-bar" aria-hidden>
+          <div style={{ width: `${Math.max(0, Math.min(100, m.soc ?? 0))}%` }} />
+        </div>
+        <span>SOC {fmt(m.soc, 0, '%')}</span>
+      </div>
+      <div className="tile-label">{m.label ?? ' '}</div>
     </button>
   );
 }
