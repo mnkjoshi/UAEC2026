@@ -6,7 +6,7 @@ raises graded alerts, and tells the operator **what is wrong, where, how soon it
 
 Built for the University of Alberta Engineering Competition 2026, Programming category.
 
-**Live demo: https://mnkjoshi.github.io/UAEC2026/** (no install needed; try `?scenario=thermal_propagation`)
+**Live demo: https://batter-eye.web.app/** (no install needed; try `?scenario=thermal_propagation`)
 
 ![Landing page: a live preview of a thermal event](docs/figures/landing.png)
 
