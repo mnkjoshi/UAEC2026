@@ -1,30 +1,20 @@
 import { useEffect, useRef } from 'react';
-import { LayoutGroup, motion } from 'motion/react';
+import { motion } from 'motion/react';
 import { SEVERITY_RANK, type Severity } from '../../core';
-import { SEVERITY_META, fmtTime } from '../format';
-import { busState, fleetLength, useFleet, type Bus } from '../fleetStore';
+import { SEVERITY_META, fmt, fmtTime } from '../format';
 import { heatColor } from '../heat';
-import { spring, springSlow } from '../motion';
+import { busState, fleetLength, useFleet, type Bus } from '../fleetStore';
+import { spring } from '../motion';
 import { useDashboard } from '../store';
-import { AnimatedNumber } from './AnimatedNumber';
 import { Icon } from './Icon';
 import { Logo } from './Logo';
+import { AnimatedNumber } from './AnimatedNumber';
 import { StatusBadge } from './StatusBadge';
 
-type BusRow = { bus: Bus; state: ReturnType<typeof busState> };
-
-/** Buses are grouped by what the operator has to do about them. */
-const GROUPS: Array<{ key: string; title: string; empty: string; match: (s: Severity) => boolean }> = [
-  { key: 'action', title: 'Needs action', empty: 'No bus has a battery hazard.', match: (s) => s === 'critical' || s === 'warning' },
-  { key: 'sensor', title: 'Sensor or data issues', empty: 'All sensors reporting.', match: (s) => s === 'data_fault' },
-  { key: 'normal', title: 'Operating normally', empty: 'No bus is fully normal.', match: (s) => s === 'normal' || s === 'advisory' },
-];
-
-const SEGMENTS: Severity[] = ['critical', 'warning', 'data_fault', 'normal'];
 
 /**
- * Fleet overview: every bus's pack at the same moment, grouped by what needs doing.
- * As playback runs, a bus that develops a fault glides from one group into another.
+ * Fleet overview: every bus's pack at the same moment, most urgent first.
+ * One glance answers "which bus do I deal with now?"; click a bus for the full dashboard.
  */
 export function FleetView() {
   const buses = useFleet((s) => s.buses);
@@ -48,23 +38,16 @@ export function FleetView() {
     return () => window.clearInterval(id);
   }, [playing, speed, intervalSec]);
 
-  const rows: BusRow[] = buses
+  const rows = buses
     .map((bus) => ({ bus, state: busState(bus, cursor) }))
     .sort((a, b) => SEVERITY_RANK[b.state.severity] - SEVERITY_RANK[a.state.severity] || a.bus.name.localeCompare(b.bus.name));
 
-  const count = (s: Severity) => rows.filter((r) => r.state.severity === s || (s === 'normal' && r.state.severity === 'advisory')).length;
-  const critical = count('critical');
-  const warning = count('warning');
-  const dataFault = count('data_fault');
+  const counts = rows.reduce<Record<Severity, number>>(
+    (acc, r) => ({ ...acc, [r.state.severity]: acc[r.state.severity] + 1 }),
+    { normal: 0, advisory: 0, data_fault: 0, warning: 0, critical: 0 },
+  );
   const worst = rows[0]?.state.severity ?? 'normal';
   const now = rows[0]?.state.timestamp;
-  const headline = critical
-    ? `${critical} bus${critical > 1 ? 'es need' : ' needs'} immediate action`
-    : warning
-      ? `${warning} bus${warning > 1 ? 'es have' : ' has'} a developing problem`
-      : dataFault
-        ? 'Fleet safe. Some sensors need attention.'
-        : 'Every bus is operating normally';
 
   return (
     <div className="fleet">
@@ -93,42 +76,32 @@ export function FleetView() {
       {error && <div className="error-bar">{error}</div>}
 
       <main className="fleet-main">
-        <motion.section
-          className={`fleet-summary sev-${worst}`}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={springSlow}
-          aria-live="polite"
-        >
-          <div className="fleet-summary-text">
-            <motion.h1 key={headline} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={spring}>
-              {headline}
-            </motion.h1>
-            <p className="muted">
-              {buses.length} buses monitored · telemetry {fmtTime(now)}
-            </p>
+        <section className={`fleet-summary sev-${worst}`} aria-live="polite">
+          <div>
+            <div className="fleet-headline">
+              {counts.critical
+                ? `${counts.critical} bus${counts.critical > 1 ? 'es need' : ' needs'} immediate action`
+                : counts.warning
+                  ? `${counts.warning} bus${counts.warning > 1 ? 'es' : ''} with a developing problem`
+                  : counts.data_fault
+                    ? 'Fleet safe; some sensors need attention'
+                    : 'Whole fleet normal'}
+            </div>
+            <div className="fleet-bar" role="img" aria-label="Fleet status breakdown">
+              {(['critical', 'warning', 'data_fault', 'advisory', 'normal'] as Severity[])
+                .filter((s) => counts[s])
+                .map((s) => (
+                  <span key={s} className={`seg sev-${s}`} style={{ flexGrow: counts[s] }}>
+                    {counts[s]} {SEVERITY_META[s].label.toLowerCase()}
+                  </span>
+                ))}
+            </div>
           </div>
-          <div className="fleet-bar" role="img" aria-label="Fleet status breakdown">
-            {SEGMENTS.map((s) => {
-              const n = count(s);
-              return (
-                <motion.div
-                  key={s}
-                  className={`seg sev-${s}${n ? '' : ' empty'}`}
-                  animate={{ flexGrow: n, opacity: n ? 1 : 0 }}
-                  transition={spring}
-                  style={{ flexBasis: 0 }}
-                >
-                  {n > 0 && (
-                    <span>
-                      <AnimatedNumber value={n} digits={0} /> {SEVERITY_META[s].label.toLowerCase()}
-                    </span>
-                  )}
-                </motion.div>
-              );
-            })}
+          <div className="fleet-clock">
+            <span className="muted">Telemetry time</span>
+            <strong>{fmtTime(now)}</strong>
           </div>
-        </motion.section>
+        </section>
 
         <section className="playback" aria-label="Fleet playback">
           <div className="pb-buttons">
@@ -153,53 +126,29 @@ export function FleetView() {
           </div>
         </section>
 
-        <LayoutGroup>
-          {GROUPS.map((g) => {
-            const items = rows.filter((r) => g.match(r.state.severity));
-            return (
-              <motion.section key={g.key} layout transition={spring} className="fleet-group" aria-label={g.title}>
-                <motion.h2 layout="position" transition={spring}>
-                  {g.title} <span className="count">{items.length}</span>
-                </motion.h2>
-                {items.length === 0 ? (
-                  <motion.p layout className="fleet-empty muted" transition={spring}>
-                    {g.empty}
-                  </motion.p>
-                ) : (
-                  <div className="fleet-grid">
-                    {items.map((r, i) => (
-                      <BusCard key={r.bus.id} row={r} index={i} onOpen={() => openBus(r.bus.id)} />
-                    ))}
-                  </div>
-                )}
-              </motion.section>
-            );
-          })}
-        </LayoutGroup>
+        <div className="fleet-grid">
+          {rows.map(({ bus, state }) => (
+            <BusCard key={bus.id} bus={bus} state={state} onOpen={() => openBus(bus.id)} />
+          ))}
+        </div>
       </main>
     </div>
   );
 }
 
-function BusCard({ row: { bus, state }, index, onOpen }: { row: BusRow; index: number; onOpen: () => void }) {
+function BusCard({ bus, state, onOpen }: { bus: Bus; state: ReturnType<typeof busState>; onOpen: () => void }) {
   const top = state.alerts[0];
   const k = state.kpis;
-  // Series order snakes: top row M01→M06, bottom row M12→M07 (as drawn on the landing page).
-  const ordered = [...state.modules.slice(0, 6), ...state.modules.slice(6).reverse()];
-
   return (
     <motion.button
       type="button"
-      layoutId={bus.id}
       layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...spring, delay: Math.min(index, 8) * 0.04 }}
+      transition={spring}
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.985 }}
       className={`bus-card sev-${state.severity}`}
       onClick={onOpen}
-      aria-label={`Open ${bus.name}: ${SEVERITY_META[state.severity].label}${top ? `, ${top.title}` : ''}`}
+      aria-label={`Open ${bus.name}`}
     >
       <div className="bus-head">
         <div>
@@ -208,36 +157,30 @@ function BusCard({ row: { bus, state }, index, onOpen }: { row: BusRow; index: n
         </div>
         <StatusBadge severity={state.severity} />
       </div>
-
       <div className="bus-pack" aria-hidden>
-        {ordered.map((m) => {
-          const flagged = m.severity !== 'normal' && m.severity !== 'advisory';
-          return (
-            <span
-              key={m.id}
-              className={`bus-cell${flagged ? ` flagged sev-${m.severity}` : ''}${m.temperature === null ? ' nodata' : ''}`}
-              style={{ ['--heat' as string]: m.temperature === null ? 'transparent' : heatColor(m.temperature) }}
-              title={`${m.id}: ${m.temperature === null ? 'no data' : `${m.temperature.toFixed(1)} °C`}`}
-            />
-          );
-        })}
+        {state.modules.map((m) => (
+          <span
+            key={m.id}
+            className={`bus-cell${m.severity !== 'normal' && m.severity !== 'advisory' ? ' hot' : ''}${m.temperature === null ? ' nodata' : ''}`}
+            style={{
+              ['--heat' as string]: m.temperature === null ? 'transparent' : heatColor(m.temperature),
+              ['--ring' as string]: SEVERITY_META[m.severity].color,
+            }}
+            title={`${m.id} ${fmt(m.temperature, 1, '°C')}`}
+          />
+        ))}
       </div>
-
       <div className="bus-alert">
         {top ? (
           <>
-            <div className="bus-alert-title">
-              {top.title}
-              <span className="muted"> · {top.moduleIds.length > 4 ? `${top.moduleIds.length} modules` : top.moduleIds.join(', ')}</span>
-              {state.alerts.length > 1 && <span className="muted"> · +{state.alerts.length - 1} more</span>}
-            </div>
-            {top.forecast && <div className="bus-forecast">{top.forecast}</div>}
+            <strong>{top.title}</strong>
+            <span className="muted"> {top.moduleIds.length > 4 ? `${top.moduleIds.length} modules` : top.moduleIds.join(', ')}</span>
+            {state.alerts.length > 1 && <span className="muted"> +{state.alerts.length - 1} more</span>}
           </>
         ) : (
-          <div className="muted">No active alerts</div>
+          <span className="muted">No active alerts</span>
         )}
       </div>
-
       <div className="bus-kpis">
         <span>
           <small>Max temp</small>
