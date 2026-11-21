@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
 import { SEVERITY_RANK, type Severity } from '../../core';
 import { SEVERITY_META, fmt, fmtTime } from '../format';
 import { busState, fleetLength, useFleet, type Bus } from '../fleetStore';
+import { spring } from '../motion';
 import { useDashboard } from '../store';
 import { Icon } from './Icon';
 import { Logo } from './Logo';
@@ -143,7 +145,15 @@ function BusCard({ bus, state, onOpen }: { bus: Bus; state: ReturnType<typeof bu
   const top = state.alerts[0];
   const k = state.kpis;
   return (
-    <button type="button" className={`bus-card sev-${state.severity}`} onClick={onOpen} aria-label={`Open ${bus.name}`}>
+    <motion.button
+      type="button"
+      layout
+      transition={spring}
+      whileTap={{ scale: 0.98 }}
+      className={`bus-card sev-${state.severity}`}
+      onClick={onOpen}
+      aria-label={`Open ${bus.name}`}
+    >
       <div className="bus-head">
         <div>
           <div className="bus-name">{bus.name}</div>
@@ -190,6 +200,6 @@ function BusCard({ bus, state, onOpen }: { bus: Bus; state: ReturnType<typeof bu
           {k.reportingModules}/{k.totalModules}
         </span>
       </div>
-    </button>
+    </motion.button>
   );
 }

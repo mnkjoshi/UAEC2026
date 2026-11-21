@@ -7,6 +7,8 @@
  *   5. event log + data quality (audit trail, can I trust the data?)
  */
 import { useEffect, useState } from 'react';
+import { MotionConfig, motion } from 'motion/react';
+import { spring } from './ui/motion';
 import { AlertPanel } from './ui/components/AlertPanel';
 import { DataQualityPanel } from './ui/components/DataQualityPanel';
 import { ErrorBoundary } from './ui/components/ErrorBoundary';
@@ -93,6 +95,7 @@ export default function App() {
   const state = timeline?.states[cursor];
 
   return (
+    <MotionConfig reducedMotion="user" transition={spring}>
     <div
       className="app"
       onDragOver={(e) => {
@@ -120,7 +123,12 @@ export default function App() {
         ) : !timeline || !dataset || !state ? (
           <Landing />
         ) : (
-          <main className="dashboard">
+          <motion.main
+            className="dashboard"
+            key={sourceName ?? 'dashboard'}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             <StatusBanner state={state} />
             <EscalationBanner />
             <PlaybackBar timeline={timeline} />
@@ -139,7 +147,7 @@ export default function App() {
               <EventLog timeline={timeline} cursor={cursor} sourceName={sourceName ?? 'dataset'} />
               <DataQualityPanel dataset={dataset} timeline={timeline} />
             </div>
-          </main>
+          </motion.main>
         )}
       </ErrorBoundary>
 
@@ -150,5 +158,6 @@ export default function App() {
         </div>
       )}
     </div>
+    </MotionConfig>
   );
 }

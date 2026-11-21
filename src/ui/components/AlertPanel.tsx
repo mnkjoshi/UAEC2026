@@ -1,5 +1,7 @@
+import { AnimatePresence, motion } from 'motion/react';
 import { describeModules, type Alert } from '../../core';
 import { fmtDuration, fmtTime } from '../format';
+import { spring } from '../motion';
 import { isAcknowledged, useDashboard } from '../store';
 import { Icon } from './Icon';
 import { StatusBadge } from './StatusBadge';
@@ -38,10 +40,19 @@ export function AlertPanel({ alerts, now, modules }: { alerts: Alert[]; now: Dat
         </div>
       ) : (
         <ul className="alert-list">
+          <AnimatePresence initial={false} mode="popLayout">
           {alerts.map((a) => {
             const acked = isAcknowledged(acknowledged, a.id, a.severity);
             return (
-              <li key={a.id} className={`alert-card sev-${a.severity}${acked ? ' acked' : ''}`}>
+              <motion.li
+                key={a.id}
+                layout
+                initial={{ opacity: 0, y: -12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 40, transition: { duration: 0.2 } }}
+                transition={spring}
+                className={`alert-card sev-${a.severity}${acked ? ' acked' : ''}`}
+              >
                 <div className="alert-top">
                   <StatusBadge severity={a.severity} />
                   <span className="alert-age" title={`First seen ${fmtTime(a.firstSeen)}`}>
@@ -81,9 +92,10 @@ export function AlertPanel({ alerts, now, modules }: { alerts: Alert[]; now: Dat
                     </button>
                   )}
                 </div>
-              </li>
+              </motion.li>
             );
           })}
+          </AnimatePresence>
         </ul>
       )}
     </section>

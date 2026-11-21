@@ -1,5 +1,7 @@
+import { AnimatePresence, motion } from 'motion/react';
 import type { PackState } from '../../core';
 import { SEVERITY_ICON, SEVERITY_META, fmtTime } from '../format';
+import { spring } from '../motion';
 import { isAcknowledged, useDashboard } from '../store';
 import { Icon } from './Icon';
 
@@ -23,14 +25,24 @@ export function StatusBanner({ state }: { state: PackState }) {
       role="status"
       aria-live="assertive"
     >
-      <div className="banner-icon" aria-hidden>
+      <motion.div className="banner-icon" aria-hidden key={state.severity} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={spring}>
         <Icon name={SEVERITY_ICON[state.severity]} size={26} />
-      </div>
+      </motion.div>
       <div className="banner-text">
-        <div className="banner-level">{meta.banner}</div>
-        <div className="banner-detail">
-          {top ? `${top.title}: ${top.moduleIds.length > 4 ? `${top.moduleIds.length} modules` : top.moduleIds.join(', ')}` : 'Every module is within limits and reporting.'}
-        </div>
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.div
+            key={meta.banner + (top?.title ?? '')}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={spring}
+          >
+            <div className="banner-level">{meta.banner}</div>
+            <div className="banner-detail">
+              {top ? `${top.title}: ${top.moduleIds.length > 4 ? `${top.moduleIds.length} modules` : top.moduleIds.join(', ')}` : 'Every module is within limits and reporting.'}
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
       <div className="banner-counts">
         <span title="Critical alerts">{counts.critical} critical</span>
