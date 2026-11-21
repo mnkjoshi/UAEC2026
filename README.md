@@ -8,7 +8,9 @@ Built for the University of Alberta Engineering Competition 2026, Programming ca
 
 **Live demo: https://mnkjoshi.github.io/UAEC2026/** (no install needed; try `?scenario=thermal_propagation`)
 
-![Thermal propagation scenario](docs/figures/dashboard.png)
+![Landing page: a live preview of a thermal event](docs/figures/landing.png)
+
+![Dashboard during thermal propagation](docs/figures/dashboard.png)
 
 ## Quick start
 
@@ -19,7 +21,7 @@ npm install
 npm run dev        # open http://localhost:5173
 ```
 
-Then either pick a scenario from **Data source**, or **drag any CSV onto the page** (or use **Upload CSV**).
+The landing page previews a thermal event live. Pick a scenario to replay, or **drag any CSV onto the page** (or use **Upload telemetry CSV**). Click the logo in the dashboard to return.
 Playback starts automatically. Space = play/pause, ← / → = step.
 
 | Command | What it does |

@@ -6,7 +6,7 @@
  * amber = warning, red + pulse = critical. Every colour is paired with an icon and a word.
  */
 :root {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.45;
   color-scheme: dark;
   font-size: 14px;
@@ -80,7 +80,7 @@ select { background: var(--surface-2); border: 1px solid var(--border); border-r
   padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--surface);
   position: sticky; top: 0; z-index: 20;
 }
-.brand { display: flex; align-items: center; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
 .brand-mark { font-size: 1.6rem; }
 .brand-name { font-weight: 700; font-size: 1.05rem; }
 .brand-sub { color: var(--text-muted); font-size: 0.8rem; }

@@ -53,6 +53,8 @@ interface DashboardState {
   loadScenarios: () => Promise<void>;
   loadScenario: (entry: ScenarioEntry) => Promise<void>;
   loadCsvText: (text: string, name: string) => void;
+  /** Back to the landing page. */
+  unload: () => void;
   setCursor: (i: number) => void;
   step: (delta: number) => void;
   setPlaying: (playing: boolean) => void;
@@ -129,6 +131,8 @@ export const useDashboard = create<DashboardState>((set, get) => {
     },
 
     loadCsvText: (text, name) => analyse(text, name),
+    unload: () =>
+      set({ dataset: null, timeline: null, sourceName: null, sourceText: null, playing: false, cursor: 0, selectedModule: null, error: null }),
 
     setCursor: (i) => {
       const n = get().timeline?.states.length ?? 0;

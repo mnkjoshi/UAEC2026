@@ -19,7 +19,7 @@ import { SettingsDrawer } from './ui/components/SettingsDrawer';
 import { StatusBanner } from './ui/components/StatusBanner';
 import { TopBar } from './ui/components/TopBar';
 import { TrendChart } from './ui/components/TrendChart';
-import { Welcome } from './ui/components/Welcome';
+import { Landing } from './ui/components/Landing';
 import { useCriticalAlarm, usePlaybackClock } from './ui/hooks';
 import { useDashboard } from './ui/store';
 
@@ -90,7 +90,7 @@ export default function App() {
       }}
       onDrop={onDrop}
     >
-      <TopBar />
+      {timeline && <TopBar />}
       {error && (
         <div className="error-bar" role="alert">
           {error}
@@ -102,7 +102,7 @@ export default function App() {
 
       <ErrorBoundary>
         {!timeline || !dataset || !state ? (
-          <Welcome />
+          <Landing />
         ) : (
           <main className="dashboard">
             <StatusBanner state={state} />

@@ -18,7 +18,7 @@ export function TopBar() {
 
   return (
     <header className="topbar">
-      <div className="brand">
+      <button type="button" className="brand" onClick={() => useDashboard.getState().unload()} title="Back to start">
         <span className="brand-mark" aria-hidden>
           ⚡
         </span>
@@ -26,7 +26,7 @@ export function TopBar() {
           <div className="brand-name">Battery Safety Monitor</div>
           <div className="brand-sub">E-bus fleet · 12-module pack BMS</div>
         </div>
-      </div>
+      </button>
 
       <div className="topbar-controls">
         <label className="source">
