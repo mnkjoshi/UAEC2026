@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Batter-eye Presentation</title>
+<!--
+  Source for docs/presentation-v2/Batter-eye_Presentation.pdf. Regenerate with:
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu --no-pdf-header-footer \
+     --virtual-time-budget=4000 --print-to-pdf=docs/presentation-v2/Batter-eye_Presentation.pdf \
+     file://$PWD/docs/presentation-v2/slides.html
+  Talking points per slide: SPEAKER_NOTES.md
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  @page { size: 1600px 900px; margin: 0; }
+  :root {
+    --bg: #0f1720; --surface: #141e28; --surface-2: #18232f; --border: #233140;
+    --text: #e9eef2; --muted: #8e9dac; --faint: #5d6c7b;
+    --accent: #ff7a1a; --ok: #5cc8d6;
+    --crit: #ff5a4a; --warn: #e3b341; --data: #b392f0; --adv: #6ea8fe;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; font-variant-numeric: tabular-nums; }
+  .slide { width: 1600px; height: 900px; padding: 58px 80px 78px; position: relative; overflow: hidden;
+    break-after: page; page-break-after: always; display: flex; flex-direction: column; background: var(--bg); }
+  .slide:last-child { break-after: auto; page-break-after: auto; }
+
+  h1, h2, h3 { margin: 0; font-weight: 700; }
+  h2 { font-size: 46px; line-height: 1.08; letter-spacing: -0.035em; max-width: 1300px; }
+  .sub { font-size: 21px; color: var(--muted); margin: 14px 0 0; line-height: 1.4; max-width: 1150px; }
+  .head { margin-bottom: 34px; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+  b, strong { font-weight: 650; }
+
+  .footer { position: absolute; left: 80px; right: 80px; bottom: 26px; display: flex; align-items: center;
+    gap: 12px; font-size: 14px; color: var(--faint); }
+  .footer img { width: 22px; height: 22px; }
+  .footer .brand { color: var(--muted); font-weight: 600; }
+  .footer .rubric { margin-left: auto; }
+  .footer .num { color: var(--muted); min-width: 22px; text-align: right; }
+
+  .shot { display: block; width: 100%; border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: 0 24px 60px rgb(0 0 0 / 0.45); }
+  .cap { font-size: 15px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
+  .crop { overflow: hidden; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 24px 60px rgb(0 0 0 / 0.45); }
+  .crop img { display: block; width: 100%; }
+
+  .tag { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--accent); color: var(--accent);
+    border-radius: 999px; padding: 5px 14px; font-size: 15px; font-weight: 650; }
+  .tag::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+
+  /* numbered points */
+  .points { display: flex; flex-direction: column; gap: 22px; }
+  .pt { display: grid; grid-template-columns: 34px 1fr; gap: 14px; align-items: start; }
+  .pt .n { font-size: 15px; font-weight: 700; color: var(--accent); border: 1.5px solid var(--accent); border-radius: 50%;
+    width: 30px; height: 30px; display: grid; place-items: center; margin-top: 1px; }
+  .pt h3 { font-size: 22px; letter-spacing: -0.01em; margin-bottom: 5px; }
+  .pt p { font-size: 17.5px; color: var(--muted); line-height: 1.42; }
+
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 14.5px; }
+  td { font-size: 17.5px; line-height: 1.35; }
+  td.why { color: var(--muted); font-size: 15.5px; }
+  .warn { color: var(--warn); } .crit { color: var(--crit); } .data { color: var(--data); } .ok { color: var(--ok); }
+  .acc { color: var(--accent); }
+  table.big td { font-size: 19.5px; padding: 14px 12px; }
+  table.big td.why { font-size: 16.5px; }
+  table.big th { font-size: 15px; }
+  .cap.l { font-size: 16.5px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.86em; color: var(--text);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; }
+
+  /* ---------- slide 1 ---------- */
+  .title-slide { justify-content: center; padding-left: 96px; }
+  .title-slide .bleed { position: absolute; right: -330px; top: 110px; width: 1180px; border-radius: 16px;
+    border: 1px solid var(--border); box-shadow: 0 40px 100px rgb(0 0 0 / 0.6);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgb(0 0 0 / 0.35) 18%, #000 45%);
+    mask-image: linear-gradient(90deg, transparent 0%, rgb(0 0 0 / 0.35) 18%, #000 45%); }
+  .title-slide .glow { position: absolute; inset: 0; background:
+    radial-gradient(700px 420px at 12% 60%, rgb(15 23 32 / 0.95), transparent 70%); }
+  .title-block { position: relative; max-width: 700px; }
+  .logo-row { display: flex; align-items: center; gap: 22px; margin-bottom: 30px; }
+  .logo-row img { width: 104px; height: 104px; }
+  .title-slide h1 { font-size: 112px; letter-spacing: -0.05em; line-height: 0.95; }
+  .title-slide .lede { font-size: 29px; line-height: 1.35; color: var(--text); margin-top: 8px; letter-spacing: -0.01em; }
+  .title-slide .meta { margin-top: 44px; font-size: 19px; color: var(--muted); line-height: 1.6; }
+  .title-slide .meta b { color: var(--text); }
+  .accent-rule { width: 64px; height: 4px; background: var(--accent); border-radius: 2px; margin: 34px 0 0; }
+
+  /* ---------- slide 2 ---------- */
+  .q-list { display: flex; flex-direction: column; }
+  .q { display: grid; grid-template-columns: 100px 1fr; padding: 38px 0; border-top: 1px solid var(--border); }
+  .q:last-child { border-bottom: 1px solid var(--border); }
+  .q .qn { font-size: 56px; font-weight: 800; letter-spacing: -0.04em; color: var(--accent); line-height: 1; }
+  .q h3 { font-size: 40px; letter-spacing: -0.03em; line-height: 1.1; }
+  .q p { font-size: 21px; color: var(--muted); margin-top: 10px; line-height: 1.4; }
+  .constraint { border-left: 3px solid var(--border); padding: 4px 0 4px 26px; }
+  .constraint + .constraint { margin-top: 56px; }
+  .constraint h3 { font-size: 28px; letter-spacing: -0.02em; margin-bottom: 10px; }
+  .constraint p { font-size: 21px; color: var(--muted); line-height: 1.45; }
+  .constraint.k-data { border-color: var(--data); }
+  .constraint.k-unseen { border-color: var(--accent); }
+
+  /* ---------- slide 3 ---------- */
+  .ov { display: grid; grid-template-columns: 360px 1fr; gap: 48px; flex: 1; min-height: 0; }
+  .ov-legend { display: flex; flex-direction: column; gap: 15px; padding-top: 4px; }
+  .ov-legend .pt h3 { font-size: 19.5px; margin-bottom: 2px; }
+  .ov-legend .pt p { font-size: 15.5px; }
+  .ov-shot { position: relative; align-self: start; }
+  .mk { position: absolute; width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #111;
+    font-weight: 800; font-size: 17px; display: grid; place-items: center; transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 4px rgb(15 23 32 / 0.9), 0 6px 16px rgb(0 0 0 / 0.5); }
+  .note { font-size: 14.5px; color: var(--faint); margin-top: auto; line-height: 1.4; }
+
+  /* ---------- slide 4 ---------- */
+  .pipe { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0; position: relative; margin-top: 6px; }
+  .stage { position: relative; padding: 0 14px 0 0; }
+  .stage .box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px 18px;
+    height: 150px; position: relative; }
+  .stage .box .k { font-size: 13px; color: var(--accent); font-weight: 700; margin-bottom: 8px; }
+  .stage .box h3 { font-size: 24px; letter-spacing: -0.02em; line-height: 1.12; }
+  .stage .box code { display: inline-block; margin-top: 12px; font-size: 13.5px; color: var(--muted); }
+  .stage::after { content: ''; position: absolute; right: -2px; top: 75px; width: 12px; height: 2px; background: var(--accent); }
+  .stage:last-child::after { display: none; }
+  .stage:last-child { padding-right: 0; }
+  .stage .does { font-size: 17px; color: var(--muted); line-height: 1.38; margin-top: 14px; padding-right: 8px; }
+  .side-out { font-size: 15.5px; color: var(--data); margin-top: 8px; }
+  .principles { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 52px; border-top: 1px solid var(--border); }
+  .principles > div { padding: 26px 34px 0 0; }
+  .principles > div + div { padding-left: 34px; border-left: 1px solid var(--border); }
+  .principles h3 { font-size: 26px; letter-spacing: -0.02em; margin-bottom: 10px; }
+  .principles p { font-size: 19px; color: var(--muted); line-height: 1.45; }
+  .io { display: flex; justify-content: space-between; font-size: 16.5px; color: var(--muted); margin-bottom: 18px; }
+  .io b { color: var(--text); }
+
+  /* ---------- slide 5 charts ---------- */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; flex: 1; min-height: 0; }
+  .chart-title { font-size: 21px; font-weight: 650; letter-spacing: -0.01em; }
+  .chart-sub { font-size: 15.5px; color: var(--muted); margin-top: 5px; line-height: 1.4; }
+  .bul { margin-top: 34px; display: flex; flex-direction: column; gap: 40px; }
+  .bul-row .lab { display: flex; justify-content: space-between; align-items: baseline; font-size: 17px; margin-bottom: 26px; }
+  .bul-row .lab .x { font-size: 15px; color: var(--muted); }
+  .bul-row .lab .x b { color: var(--text); font-size: 19px; }
+  .track { position: relative; height: 12px; background: var(--surface-2); border-radius: 6px; border: 1px solid var(--border); }
+  .track .fill { position: absolute; left: 0; top: -1px; bottom: -1px; background: var(--ok); border-radius: 6px; }
+  .track .tick { position: absolute; top: -9px; bottom: -9px; width: 3px; border-radius: 2px; transform: translateX(-50%); }
+  .track .tick.w { background: var(--warn); } .track .tick.c { background: var(--crit); left: 100%; }
+  .track .tl { position: absolute; top: -27px; font-size: 13.5px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+  .track .tl.c { transform: translateX(-100%); left: 100%; }
+  .track .vl { position: absolute; top: 18px; font-size: 13.5px; color: var(--text); white-space: nowrap; }
+  .legend { display: flex; gap: 22px; font-size: 14.5px; color: var(--muted); margin-top: 18px; align-items: center; flex-wrap: wrap; }
+  .legend i { display: inline-block; vertical-align: middle; margin-right: 7px; }
+  .sw-fill { width: 18px; height: 10px; border-radius: 3px; background: var(--ok); }
+  .sw-w { width: 3px; height: 16px; background: var(--warn); border-radius: 2px; }
+  .sw-c { width: 3px; height: 16px; background: var(--crit); border-radius: 2px; }
+  .dot-us { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); }
+  .dot-fx { width: 14px; height: 14px; border-radius: 50%; border: 2.5px solid var(--muted); }
+
+  .tl-chart { margin-top: 30px; position: relative; }
+  .tl-row { position: relative; height: 104px; }
+  .tl-row .name { font-size: 17px; margin-bottom: 14px; }
+  .tl-row .name span { color: var(--muted); font-size: 14.5px; margin-left: 8px; }
+  .tl-lane { position: relative; height: 18px; margin-left: 0; }
+  .tl-lane .base { position: absolute; left: 0; right: 0; top: 8px; height: 2px; background: var(--border); }
+  .tl-lane .gap { position: absolute; top: 4px; height: 10px; background: rgb(255 122 26 / 0.18); border-radius: 5px; }
+  .tl-lane .m { position: absolute; top: 9px; transform: translate(-50%, -50%); }
+  .tl-lane .m.us { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--bg); }
+  .tl-lane .m.fx { width: 16px; height: 16px; border-radius: 50%; background: var(--bg); border: 2.5px solid var(--muted); box-shadow: 0 0 0 3px var(--bg); }
+  .tl-lane .gl { position: absolute; top: 24px; font-size: 13.5px; color: var(--text); transform: translateX(-50%); white-space: nowrap; }
+  .axis { position: relative; height: 30px; border-top: 1px solid var(--border); margin-top: 4px; }
+  .axis span { position: absolute; top: 8px; font-size: 13.5px; color: var(--muted); transform: translateX(-50%); white-space: nowrap; }
+  .axis span:first-child { transform: none; }
+  .axis span:last-child { transform: translateX(-100%); }
+  .takeaway { margin-top: 22px; font-size: 18.5px; line-height: 1.45; border-left: 3px solid var(--accent); padding-left: 18px; }
+
+  /* ---------- generic layouts ---------- */
+  .split { display: grid; gap: 52px; flex: 1; min-height: 0; }
+  .stack { display: flex; flex-direction: column; gap: 22px; min-height: 0; }
+  .bignum { font-size: 112px; font-weight: 800; letter-spacing: -0.06em; line-height: 0.9; color: var(--ok); }
+  .bigcap { font-size: 19px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+
+  .mech { display: flex; flex-direction: column; }
+  .mech > div { padding: 17px 0; border-top: 1px solid var(--border); display: grid; grid-template-columns: 190px 1fr; gap: 18px; }
+  .mech > div:last-child { border-bottom: 1px solid var(--border); }
+  .mech h3 { font-size: 19px; letter-spacing: -0.01em; }
+  .mech p { font-size: 16.5px; color: var(--muted); line-height: 1.42; }
+  .mech p b { color: var(--text); }
+
+  .bl { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 16px; }
+  .bl li { font-size: 18px; line-height: 1.42; padding-left: 22px; position: relative; color: var(--text); }
+  .bl li::before { content: ''; position: absolute; left: 0; top: 10px; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); }
+  .bl li span { color: var(--muted); }
+  .bl.data li::before { background: var(--data); }
+
+  .chips { display: flex; flex-direction: column; gap: 0; }
+  .chip-row { display: grid; grid-template-columns: 170px 1fr; align-items: center; gap: 14px; padding: 11px 0; border-top: 1px solid var(--border); }
+  .chip-row:last-child { border-bottom: 1px solid var(--border); }
+  .chip { display: inline-flex; align-items: center; gap: 9px; border-radius: 999px; padding: 5px 13px 5px 6px; font-weight: 650; font-size: 15.5px; width: max-content; }
+  .chip .ic { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800; color: #111; }
+  .chip-row p { font-size: 15.5px; color: var(--muted); }
+  .c-ok { background: rgb(92 200 214 / 0.12); color: var(--ok); border: 1px solid rgb(92 200 214 / 0.4); } .c-ok .ic { background: var(--ok); }
+  .c-adv { background: rgb(110 168 254 / 0.12); color: var(--adv); border: 1px solid rgb(110 168 254 / 0.4); } .c-adv .ic { background: var(--adv); }
+  .c-data { background: repeating-linear-gradient(135deg, rgb(179 146 240 / 0.16) 0 6px, rgb(179 146 240 / 0.05) 6px 12px); color: var(--data); border: 1px solid rgb(179 146 240 / 0.5); } .c-data .ic { background: var(--data); }
+  .c-warn { background: rgb(227 179 65 / 0.12); color: var(--warn); border: 1px solid rgb(227 179 65 / 0.45); } .c-warn .ic { background: var(--warn); }
+  .c-crit { background: rgb(255 90 74 / 0.14); color: var(--crit); border: 1px solid rgb(255 90 74 / 0.5); } .c-crit .ic { background: var(--crit); }
+
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .stats > div { padding: 20px 22px 20px 0; }
+  .stats > div + div { padding-left: 22px; border-left: 1px solid var(--border); }
+  .stats .v { font-size: 50px; font-weight: 800; letter-spacing: -0.045em; line-height: 1; }
+  .stats .l { font-size: 15px; color: var(--muted); margin-top: 8px; line-height: 1.35; }
+
+  .sc td { font-size: 16.5px; padding: 9px 10px; }
+  .sc td:first-child { color: var(--text); }
+  .sc td:last-child { color: var(--muted); }
+  .sc th { font-size: 13.5px; padding: 6px 10px; }
+  .res { font-weight: 650; }
+
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 54px 1fr; padding: 15px 0; border-top: 1px solid var(--border); }
+  .steps li:last-child { border-bottom: 1px solid var(--border); }
+  .steps li::before { content: counter(s, decimal-leading-zero); font-size: 21px; font-weight: 800; color: var(--accent); letter-spacing: -0.02em; }
+  .steps h3 { font-size: 21px; letter-spacing: -0.015em; }
+  .steps p { font-size: 16px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+  .close { justify-content: center; align-items: flex-start; padding-left: 96px; }
+  .close > *:not(.bleed):not(.glow) { position: relative; }
+  .close h1 { font-size: 120px; letter-spacing: -0.055em; line-height: 0.95; }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="slide title-slide">
+  <img class="bleed" src="img/overview.png" alt="" />
+  <div class="glow"></div>
+  <div class="title-block">
+    <div class="logo-row"><img src="img/batter-eye.svg" alt="Batter-eye logo" /></div>
+    <h1>Batter-eye</h1>
+    <p class="lede" style="margin-top:22px">Battery safety monitoring for an electric-bus fleet. It shows what is wrong, where, how soon it becomes critical, and what to do.</p>
+    <div class="accent-rule"></div>
+    <p class="meta"><b>UAEC 2026 · Programming</b><br />University of Alberta Engineering Competition</p>
+  </div>
+</section>
+
+<!-- 2. Problem -->
+<section class="slide">
+  <div class="head">
+    <h2>An operator under pressure needs three answers, in seconds</h2>
+  </div>
+  <div class="split" style="grid-template-columns: 1.15fr 0.85fr; gap: 90px;">
+    <div class="q-list">
+      <div class="q"><div class="qn">1</div><div><h3>Is anything wrong?</h3><p>One glance at the screen, from across the depot. No reading of numbers.</p></div></div>
+      <div class="q"><div class="qn">2</div><div><h3>Where, and how fast?</h3><p>Which of the 12 modules, how quickly, and when it will cross a safety limit.</p></div></div>
+      <div class="q"><div class="qn">3</div><div><h3>What do I do now?</h3><p>A diagnosis and a concrete action, not a raw "threshold exceeded".</p></div></div>
+    </div>
+    <div style="padding-top:60px">
+      <div class="constraint k-data"><h3>Sensors cannot be trusted blindly</h3><p>Readings drop out, freeze, spike or arrive as <code>ERR</code> and <code>-999</code>. A dead sensor must not look like a fire, and a missing reading must not look safe.</p></div>
+      <div class="constraint k-unseen"><h3>Judged on data we have never seen</h3><p>The judging file has new anomalies, missing values and edge cases. Nothing can be tuned to the five sample files.</p></div>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">The brief</span><span class="num">2</span></div>
+</section>
+
+<!-- 3. Overview -->
+<section class="slide">
+  <div class="head" style="margin-bottom:28px">
+    <h2>One screen, read top to bottom in order of priority</h2>
+  </div>
+  <div class="ov">
+    <div class="ov-legend">
+      <div class="pt"><span class="n">1</span><div><h3>Pack status</h3><p>One word, one colour, the top problem, telemetry clock.</p></div></div>
+      <div class="pt"><span class="n">2</span><div><h3>Playback</h3><p>Replay any CSV as a live feed. Alert markers on the timeline.</p></div></div>
+      <div class="pt"><span class="n">3</span><div><h3>Pack map</h3><p>12 modules in series order: temperature, voltage, SOC, severity, rate.</p></div></div>
+      <div class="pt"><span class="n">4</span><div><h3>Alert card</h3><p>Diagnosis, time-to-limit forecast, action, acknowledge.</p></div></div>
+      <div class="pt"><span class="n">5</span><div><h3>Pack KPIs</h3><p>Turn amber and red at the same limits the engine uses.</p></div></div>
+      <div class="pt"><span class="n">6</span><div><h3>Trends and module detail</h3><p>How we got here, for the pack and the selected module.</p></div></div>
+      <p class="note">Thermal rise scenario, 2 min 30 s after onset. Screenshots show the current visual design; every feature on slides 3–12 was in the submitted build.</p>
+    </div>
+    <div class="ov-shot">
+      <img class="shot" src="img/overview.png" alt="Batter-eye dashboard during a thermal rise on M07" />
+      <span class="mk" style="left:57%;top:12.8%">1</span>
+      <span class="mk" style="left:80%;top:22%">2</span>
+      <span class="mk" style="left:22%;top:29.3%">3</span>
+      <span class="mk" style="left:80%;top:29.3%">4</span>
+      <span class="mk" style="left:-2.4%;top:69%">5</span>
+      <span class="mk" style="left:14%;top:78%">6</span>
+      <span class="mk" style="left:85%;top:66%">6</span>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">GUI · Solution completeness</span><span class="num">3</span></div>
+</section>
+
+<!-- 4. Architecture -->
+<section class="slide">
+  <div class="head">
+    <h2>A causal pipeline, with the detection engine separate from the UI</h2>
+    <p class="sub">Every sample, all 12 modules pass through the same six stages. <code>src/core</code> is plain TypeScript with no UI code; <code>src/ui</code> only renders what the engine returns.</p>
+  </div>
+  <div class="io"><span><b>In:</b> any battery CSV, one row per module per timestamp</span><span><b>Out:</b> per-frame pack state, module severities, alerts, event log</span></div>
+  <div class="pipe">
+    <div class="stage"><div class="box"><div class="k">1</div><h3>Parser</h3><code>parser.ts</code></div><p class="does">Tolerant ingest: headers, blanks, <code>ERR</code>, duplicates, order, gaps.</p><p class="side-out">→ data-quality report</p></div>
+    <div class="stage"><div class="box"><div class="k">2</div><h3>Sensor integrity</h3><code>sensorIntegrity.ts</code></div><p class="does">Missing, stuck, out-of-range, sentinel, spike, status flag.</p><p class="side-out">→ untrusted values withheld</p></div>
+    <div class="stage"><div class="box"><div class="k">3</div><h3>Hazard detectors</h3><code>hazards.ts</code></div><p class="does">Absolute limit, deviation from pack median, rate of change.</p></div>
+    <div class="stage"><div class="box"><div class="k">4</div><h3>Condition tracker</h3><code>conditions.ts</code></div><p class="does">Persistence, hysteresis, freeze on dropout.</p></div>
+    <div class="stage"><div class="box"><div class="k">5</div><h3>Diagnosis</h3><code>diagnosis.ts</code></div><p class="does">Groups by adjacency, names the root cause, action, forecast.</p></div>
+    <div class="stage"><div class="box"><div class="k">6</div><h3>Alert manager</h3><code>alerts.ts</code></div><p class="does">One identity per problem: raise, escalate, merge, clear.</p></div>
+  </div>
+  <div class="principles">
+    <div><h3>Causal</h3><p>The state at time <i>t</i> uses only data up to <i>t</i>, so replaying a file behaves exactly like a live feed.</p></div>
+    <div><h3>Testable in isolation</h3><p>The engine runs headless under Vitest and is cross-checked by an independent Python implementation of the same rules.</p></div>
+    <div><h3>Nothing hard-coded</h3><p>Module IDs, module count and sample interval are read from the file. Cell vs module voltage is inferred. Every threshold lives in <code>config.ts</code>.</p></div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">Program design &amp; architecture · Code quality</span><span class="num">4</span></div>
+</section>
+
+<!-- 5. Data-driven thresholds -->
+<section class="slide">
+  <div class="head">
+    <h2>We measured normal first, then set each limit at about 2× its worst case</h2>
+  </div>
+  <div class="two">
+    <div>
+      <div class="chart-title">Normal-data worst case vs our limits</div>
+      <div class="chart-sub">Measured on the provided normal dataset (36 samples × 12 modules). Scale: 0 to the critical limit.</div>
+      <div class="bul">
+        <div class="bul-row"><div class="lab"><span>Temperature above pack median</span><span class="x"><b>2.1×</b> margin to warning</span></div>
+          <div class="track"><div class="fill" style="width:23.3%"></div><div class="tick w" style="left:50%"></div><span class="tl" style="left:50%">warning 5 °C</span><div class="tick c"></div><span class="tl c">critical 10 °C</span><span class="vl" style="left:0">normal max 2.33 °C</span></div></div>
+        <div class="bul-row"><div class="lab"><span>Cell voltage from pack median</span><span class="x"><b>2.3×</b></span></div>
+          <div class="track"><div class="fill" style="width:13%"></div><div class="tick w" style="left:30%"></div><span class="tl" style="left:30%">warning 30 mV</span><div class="tick c"></div><span class="tl c">critical 100 mV</span><span class="vl" style="left:0">normal max 13 mV</span></div></div>
+        <div class="bul-row"><div class="lab"><span>Temperature rise rate</span><span class="x"><b>2.3×</b></span></div>
+          <div class="track"><div class="fill" style="width:21.5%"></div><div class="tick w" style="left:50%"></div><span class="tl" style="left:50%">warning 2 °C/min</span><div class="tick c"></div><span class="tl c">critical 4 °C/min</span><span class="vl" style="left:0">normal max 0.86 °C/min</span></div></div>
+        <div class="bul-row"><div class="lab"><span>Cell voltage fall rate</span><span class="x"><b>3.1×</b></span></div>
+          <div class="track"><div class="fill" style="width:16%"></div><div class="tick w" style="left:50%"></div><span class="tl" style="left:50%">warning 0.05 V/min</span><div class="tick c"></div><span class="tl c">critical 0.10 V/min</span><span class="vl" style="left:0">normal max 0.016 V/min</span></div></div>
+      </div>
+      <div class="legend" style="margin-top:34px"><span><i class="sw-fill"></i>Normal worst case</span><span><i class="sw-w"></i>Warning</span><span><i class="sw-c"></i>Critical</span><span>Stuck sensor: normal repeats ≤ 2 (T) / ≤ 4 (V) samples; we flag 6 / 9</span></div>
+    </div>
+    <div>
+      <div class="chart-title">First detection after fault onset</div>
+      <div class="chart-sub">Provided fault datasets. First sample each rule fires, before persistence.</div>
+      <div class="legend" style="margin-top:14px"><span><i class="dot-us"></i>Pack-relative / rate rule</span><span><i class="dot-fx"></i>Fixed absolute limit (3.4 V / 45 °C)</span></div>
+      <div class="tl-chart">
+        <div class="tl-row"><div class="name">M03 low voltage<span>onset 12:02:30</span></div>
+          <div class="tl-lane"><div class="base"></div><div class="gap" style="left:5.6%;width:77.7%"></div><span class="m us" style="left:5.6%"></span><span class="m fx" style="left:83.3%"></span><span class="gl" style="left:44.4%">140 s earlier</span></div></div>
+        <div class="tl-row"><div class="name">M07 thermal rise<span>onset 12:02:00</span></div>
+          <div class="tl-lane"><div class="base"></div><div class="gap" style="left:22.2%;width:44.5%"></div><span class="m us" style="left:22.2%"></span><span class="m fx" style="left:66.7%"></span><span class="gl" style="left:44.4%">80 s earlier</span></div></div>
+        <div class="tl-row"><div class="name">M04–M06 multi-module heating<span>onset 12:03:00</span></div>
+          <div class="tl-lane"><div class="base"></div><div class="gap" style="left:38.9%;width:55.5%"></div><span class="m us" style="left:38.9%"></span><span class="m fx" style="left:94.4%"></span><span class="gl" style="left:66.7%">100 s earlier</span></div></div>
+        <div class="axis"><span style="left:0">onset</span><span style="left:33.3%">+60 s</span><span style="left:66.7%">+120 s</span><span style="left:100%">+180 s</span></div>
+      </div>
+      <p class="takeaway">Comparing each module with the rest of the pack catches every provided fault <b>minutes before</b> a fixed limit. Absolute limits stay as the backstop, for example when the whole pack heats together.</p>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">Engineering reasoning · docs/DATA_ANALYSIS.md</span><span class="num">5</span></div>
+</section>
+
+<!-- 6. Detectors + thresholds -->
+<section class="slide">
+  <div class="head">
+    <h2>Three independent checks on every module, every sample</h2>
+  </div>
+  <div class="split" style="grid-template-columns: 520px 1fr; gap: 56px;">
+    <div class="stack">
+      <div class="crop"><img src="img/story_compare.png" alt="Three checks on module M07" /></div>
+      <p class="cap" style="margin-top:0"><b style="color:var(--text)">Why the pack median?</b> One or two faulty modules cannot drag it, and it follows ambient temperature and load automatically. Untrusted sensors are excluded; at least 3 trusted modules are required.</p>
+      <p class="cap" style="margin-top:0"><b style="color:var(--text)">Rate</b> is a least-squares slope over the last 30 s, on real timestamps, so it works at any sample interval.</p>
+    </div>
+    <div>
+      <table class="big">
+        <tr><th style="width:27%">Check</th><th style="width:16%">Warning</th><th style="width:16%">Critical</th><th>Why this value</th></tr>
+        <tr><td>Temperature</td><td class="warn">45 °C</td><td class="crit">55 °C</td><td class="why">Li-ion discharge limit is 55–60 °C; ageing accelerates above ~45 °C</td></tr>
+        <tr><td>Above pack median</td><td class="warn">+5 °C</td><td class="crit">+10 °C</td><td class="why">2.1× the normal worst case (2.33 °C)</td></tr>
+        <tr><td>Temperature rise</td><td class="warn">2 °C/min</td><td class="crit">4 °C/min</td><td class="why">Normal max 0.86 °C/min; provided faults rise 5–7.5 °C/min</td></tr>
+        <tr><td>Cell voltage low / high</td><td class="warn">3.40 / 4.15 V</td><td class="crit">3.20 / 4.20 V</td><td class="why">NMC discharge cut-off ~3.0 V, charge limit 4.2 V</td></tr>
+        <tr><td>Voltage from median</td><td class="warn">30 mV</td><td class="crit">100 mV</td><td class="why">2.3× the normal worst case (13 mV), either side</td></tr>
+        <tr><td>Voltage fall rate</td><td class="warn">0.05 V/min</td><td class="crit">0.10 V/min</td><td class="why">Normal max 0.016 V/min; provided fault 0.11 V/min</td></tr>
+        <tr><td>SOC / SOH</td><td class="warn">20 / 80 %</td><td class="crit">10 / 70 %</td><td class="why">Time to return to depot; 80 % SOH is traction end-of-life</td></tr>
+      </table>
+      <p class="cap" style="margin-top:16px">Voltage is graded per cell. If a file reports module voltage (e.g. 44 V), cells in series = round(median V / 3.7) and every limit scales. All values are editable live in the Thresholds panel.</p>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">Fault detection · docs/DETECTION_LOGIC.md</span><span class="num">6</span></div>
+</section>
+
+<!-- 7. False alarms -->
+<section class="slide">
+  <div class="head">
+    <h2>Engineered so that normal data raises zero alerts</h2>
+  </div>
+  <div class="split" style="grid-template-columns: 1fr 760px; gap: 64px;">
+    <div class="stack" style="gap:26px">
+      <div style="display:flex;align-items:flex-end;gap:24px"><div class="bignum">0</div><p class="bigcap" style="margin-bottom:6px">alerts on the normal dataset,<br />at every one of its 36 timestamps</p></div>
+      <div class="mech">
+        <div><h3>Persistence</h3><p><b>3 samples</b> to raise a warning, <b>2</b> for critical. One noisy sample can never alert.</p></div>
+        <div><h3>Hysteresis</h3><p>Must recover past the limit by a margin (2 °C, 30 mV) for <b>3 samples</b> to clear. No flicker at the boundary.</p></div>
+        <div><h3>Freeze on dropout</h3><p>While a sensor is untrusted, its hazards neither clear nor progress. <b>Unknown is not safe.</b></p></div>
+        <div><h3>One alert per problem</h3><p>An alert keeps its ID as it grows, escalates or merges. No floods of duplicates.</p></div>
+      </div>
+    </div>
+    <div class="stack" style="gap:16px">
+      <div class="crop"><img src="img/normal.png" alt="Normal operations: Pack normal, no active alerts" /></div>
+      <p class="cap" style="margin-top:0">Normal operations at the last sample: "Pack normal", no active alerts.</p>
+      <div class="crop" style="width:560px"><img src="img/story_persist.png" alt="A one-sample blip is ignored" /></div>
+      <p class="cap" style="margin-top:0">A one-sample blip is logged as "Ignored", never raised.</p>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">Reliability: no false alarms</span><span class="num">7</span></div>
+</section>
+
+<!-- 8. Data integrity -->
+<section class="slide">
+  <div class="head">
+    <h2>A broken sensor is not a battery fire</h2>
+  </div>
+  <div class="split" style="grid-template-columns: 470px 1fr; gap: 56px;">
+    <ul class="bl data" style="gap:18px">
+      <li>Detects <b>missing, stuck, out-of-range, sentinel</b> (<code>-999</code>), <b>corrupted</b> (<code>ERR</code>, <code>abc</code>), implausible jumps and sensor status flags.</li>
+      <li>Shown as a <b class="data">data fault</b>: purple, hatched, "?" icon. Never red. <span>Ranks below a hazard, so it never masks one.</span></li>
+      <li>Untrusted values are withheld from detection <b>and</b> from the pack median. <span>One bad sensor cannot distort the other eleven.</span></li>
+      <li>A heating module that loses its sensor <b>keeps its thermal alert</b>. <span>Unknown is not safe.</span></li>
+      <li>All 12 modules silent at once is <b>one</b> "Communication loss" alert, not twelve.</li>
+    </ul>
+    <div class="stack" style="gap:18px">
+      <div class="crop"><img src="img/sensor_view.png" alt="Sensor dropout on M11 shown as a data fault" /></div>
+      <div style="display:grid;grid-template-columns: 1fr 1fr; gap: 20px; align-items:start">
+        <div><div class="crop"><img src="img/hwd_pack_21.png" alt="M04 heating with sensor dropout stays critical" /></div><p class="cap">M04 heating, then its temperature sensor drops out: still critical.</p></div>
+        <div><div class="crop"><img src="img/comms_alerts.png" alt="Communication loss alert" style="margin-top:-2px" /></div><p class="cap">Pack-wide dropout: one alert with a BMS-link action.</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">Data integrity: missing, stuck, corrupted</span><span class="num">8</span></div>
+</section>
+
+<!-- 9. Diagnosis -->
+<section class="slide">
+  <div class="head">
+    <h2>From a threshold breach to a root cause, a forecast and an action</h2>
+  </div>
+  <div class="split" style="grid-template-columns: 600px 1fr; gap: 56px;">
+    <div class="stack" style="gap:16px">
+      <div class="crop"><img src="img/tp_alerts.png" alt="Thermal propagation from M07 alert card" /></div>
+      <div class="crop"><img src="img/tp_log.png" alt="Event log showing the alert being updated" /></div>
+      <p class="cap" style="margin-top:0">ALT-001 kept its identity: raised as an isolated thermal event on M07, then updated to propagation when M06 and M08 followed.</p>
+    </div>
+    <div>
+      <table class="big">
+        <tr><th style="width:43%">Pattern the engine sees</th><th>Diagnosis</th></tr>
+        <tr><td>One module heating, neighbours normal</td><td>Isolated thermal event</td></tr>
+        <tr><td>Same module heating <b>and</b> voltage falling</td><td class="crit">Suspected internal short circuit</td></tr>
+        <tr><td>Adjacent modules heating together</td><td>Multi-module heating: check coolant to that section</td></tr>
+        <tr><td>Neighbours start ≥ 30 s after a source</td><td class="crit">Thermal propagation from Mxx</td></tr>
+        <tr><td>≥ 75 % of modules, or the median, rising</td><td>Pack-wide temperature rise: cooling, HVAC, load</td></tr>
+        <tr><td>One module's voltage falling</td><td>Module voltage drop</td></tr>
+        <tr><td>T/V missing while current still flows</td><td class="data">Sensor or wiring-harness fault</td></tr>
+      </table>
+      <p class="cap" style="margin-top:18px">Forecast: at the current slope, when the module reaches the critical limit ("M07 reaches 55 °C in ~44 s"). Every diagnosis maps to a concrete action for the driver or depot.</p>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">Fault detection &amp; diagnosis</span><span class="num">9</span></div>
+</section>
+
+<!-- 10. UI / UX -->
+<section class="slide">
+  <div class="head">
+    <h2>Designed to be read at a glance, under pressure</h2>
+  </div>
+  <div class="split" style="grid-template-columns: 520px 1fr 270px; gap: 44px;">
+    <div class="points" style="gap:20px">
+      <div class="pt"><span class="n">1</span><div><h3>Colour is reserved for urgency</h3><p>Quiet dark base. Healthy modules and trend lines stay neutral; orange is only for actions.</p></div></div>
+      <div class="pt"><span class="n">2</span><div><h3>Never colour alone</h3><p>Every state has an icon and a word; data faults are hatched. Safe for colour-blind operators and projectors.</p></div></div>
+      <div class="pt"><span class="n">3</span><div><h3>Reading order is priority order</h3><p>Status, then alerts, then the pack map, KPIs, trends and the log.</p></div></div>
+      <div class="pt"><span class="n">4</span><div><h3>Physical layout</h3><p>Modules in series order, so heat spreading between neighbours is visible on the map.</p></div></div>
+      <div class="pt"><span class="n">5</span><div><h3>Operator in control</h3><p>Acknowledge, scrub to any alert, export, tune thresholds. Optional audible alarm, keyboard control, reduced motion respected.</p></div></div>
+    </div>
+    <div class="stack" style="gap:20px">
+      <div class="crop"><img src="img/tp_pack.png" alt="Pack map with three critical modules" /></div>
+      <div class="chips">
+        <div class="chip-row"><span class="chip c-ok"><span class="ic">&#10003;</span>Normal</span><p>Within all limits</p></div>
+        <div class="chip-row"><span class="chip c-adv"><span class="ic">i</span>Advisory</span><p>Logged, no action needed</p></div>
+        <div class="chip-row"><span class="chip c-data"><span class="ic">?</span>No data</span><p>Sensor problem; state unverified</p></div>
+        <div class="chip-row"><span class="chip c-warn"><span class="ic">!</span>Warning</span><p>Developing problem; act soon</p></div>
+        <div class="chip-row"><span class="chip c-crit"><span class="ic">&#10005;</span>Critical</span><p>Immediate action; pulses until acknowledged</p></div>
+      </div>
+    </div>
+    <div class="stack" style="gap:10px">
+      <div class="crop"><img src="img/thresholds.png" alt="Thresholds panel" /></div>
+      <p class="cap" style="margin-top:0">Thresholds panel: change a limit, the file is re-analysed instantly.</p>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">GUI &amp; accessibility</span><span class="num">10</span></div>
+</section>
+
+<!-- 11. Completeness -->
+<section class="slide">
+  <div class="head">
+    <h2>Everything needed to investigate, not just to raise an alarm</h2>
+  </div>
+  <div class="split" style="grid-template-columns: 1fr 520px; gap: 44px;">
+    <div class="stack" style="gap:14px">
+      <div class="crop"><img src="img/tp_trend.png" alt="Temperature trend chart" /></div>
+      <p class="cap l" style="margin-top:0"><b style="color:var(--text)">Historical trends</b> for temperature, voltage, current, SOC and SOH, with warning and critical lines. Healthy modules grey, troubled modules in their severity colour.</p>
+      <div class="crop"><img src="img/sf_log.png" alt="Event log with ignored blips" /></div>
+    </div>
+    <div class="stack" style="gap:14px">
+      <div class="crop"><img src="img/tr_detail.png" alt="Module M07 detail panel" /></div>
+      <p class="cap l" style="margin-top:0"><b style="color:var(--text)">Module detail:</b> every reading, deviation from the pack, rates, its own chart and the conditions behind the alert.</p>
+      <p class="cap l" style="margin-top:0"><b style="color:var(--text)">Event log</b> (left): every raise, update, clear and ignored blip, exportable to CSV.</p>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">Completeness: pack + 12 modules, trends, detection, data integrity</span><span class="num">11</span></div>
+</section>
+
+<!-- 12. Validation -->
+<section class="slide">
+  <div class="head" style="margin-bottom:26px">
+    <h2>Validated against everything we expected the judges to try</h2>
+  </div>
+  <div class="stats">
+    <div><div class="v">17</div><div class="l">scenarios: 5 provided, 12 we generated</div></div>
+    <div><div class="v">58</div><div class="l">automated tests (Vitest), all passing</div></div>
+    <div><div class="v">300</div><div class="l">randomly corrupted files parsed without a crash</div></div>
+    <div><div class="v">19/19</div><div class="l">checks agree with an independent Python detector</div></div>
+    <div><div class="v ok">0</div><div class="l">false alarms on normal data</div></div>
+  </div>
+  <div class="split" style="grid-template-columns: 1fr 1fr 400px; gap: 34px; margin-top: 22px; align-items: start;">
+    <table class="sc">
+      <tr><th>Provided scenario</th><th>Result</th></tr>
+      <tr><td>Normal operations</td><td><span class="res ok">No alerts</span></td></tr>
+      <tr><td>Low voltage (M03)</td><td><span class="res crit">Critical</span>, 20 s after onset</td></tr>
+      <tr><td>Thermal rise (M07)</td><td><span class="res crit">Critical</span> at 33 °C, with forecast</td></tr>
+      <tr><td>Multiple heating</td><td>One M04–M06 alert</td></tr>
+      <tr><td>Sensor failure (M11)</td><td><span class="res data">Data fault</span>, clears on recovery</td></tr>
+      <tr><th style="padding-top:14px">Generated hazard</th><th style="padding-top:14px"></th></tr>
+      <tr><td>Over-voltage · internal short</td><td>Diagnosed correctly</td></tr>
+      <tr><td>Thermal propagation</td><td>Source M07 identified</td></tr>
+      <tr><td>Pack-wide heating · low SOC</td><td>One pack-level alert</td></tr>
+    </table>
+    <table class="sc">
+      <tr><th>Generated edge case</th><th>Result</th></tr>
+      <tr><td>Stuck sensor (M08)</td><td><span class="res data">Data fault</span> only</td></tr>
+      <tr><td>Single-sample spike</td><td>Ignored, logged</td></tr>
+      <tr><td>Comms loss (all 12)</td><td>One alert, not 12</td></tr>
+      <tr><td>Missing module rows</td><td>Dropout, no crash</td></tr>
+      <tr><td>Heating + sensor dropout</td><td>Alert kept through dropout</td></tr>
+      <tr><td>Corrupted values</td><td>No hazards, all reported</td></tr>
+      <tr><td>Messy format, out of order</td><td>Cleaned, no false alarms</td></tr>
+      <tr><td>Empty / header-only file</td><td>Clear error message</td></tr>
+    </table>
+    <div class="stack" style="gap:10px">
+      <div class="crop"><img src="img/messy_dq.png" alt="Data-quality panel for a messy file" /></div>
+      <p class="cap" style="margin-top:0">Data-quality panel on the messy file: skipped rows, duplicates and re-sorting are reported, not hidden.</p>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">Reliability on unseen data · <code style="font-size:12px">npm test</code> · <code style="font-size:12px">tools/validate.py</code></span><span class="num">12</span></div>
+</section>
+
+<!-- 13. Built next -->
+<section class="slide">
+  <div class="head" style="margin-bottom:26px">
+    <div style="margin-bottom:16px"><span class="tag">Built after submission</span></div>
+    <h2>What we built next</h2>
+    <p class="sub">Same detection engine, same thresholds and tests. These features were added after the 21 November deadline and are not part of the judged build.</p>
+  </div>
+  <div class="split" style="grid-template-columns: 780px 1fr; gap: 48px;">
+    <div class="stack" style="gap:12px">
+      <div class="crop"><img src="img/fleet_map.png" alt="Fleet map of Edmonton with simulated bus positions, the four ETS garages and driver guidance" /></div>
+      <p class="cap" style="margin-top:0"><b style="color:var(--text)">Fleet overview with live map:</b> eight buses ranked by severity. Simulated positions on Edmonton, the four real ETS garages, and a line from every troubled bus to its nearest garage with driver guidance (stop safely, return to depot, or request a tow). The same map and guidance appear in each bus's pack dashboard and its alert cards.</p>
+    </div>
+    <div class="stack" style="gap:14px">
+      <div class="crop"><img src="img/escalation.png" alt="Escalation banner" /></div>
+      <p class="cap" style="margin-top:0"><b style="color:var(--text)">Escalation:</b> a critical left unacknowledged for 20 s is escalated to the depot supervisor, with optional desktop notifications.</p>
+      <div class="crop" style="height:228px"><img src="img/report.png" alt="Incident report" /></div>
+      <p class="cap" style="margin-top:0"><b style="color:var(--text)">Incident report:</b> a printable summary with every alert, its action and traces.</p>
+      <ul class="bl" style="gap:8px;margin-top:4px">
+        <li style="font-size:16px">Batter-eye name, logo and redesigned interface; animated landing page</li>
+        <li style="font-size:16px">Bus positions are simulated (the telemetry has no GPS); garages are at their real addresses</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">Built after submission</span><span class="num">13</span></div>
+</section>
+
+<!-- 14. Demo -->
+<section class="slide">
+  <div class="head">
+    <h2>Live demo: your dataset, never seen before</h2>
+  </div>
+  <div class="split" style="grid-template-columns: 1fr 720px; gap: 64px;">
+    <ol class="steps">
+      <li><div><h3>Drop the judging CSV onto the dashboard</h3><p>Parsed in the browser. No server, nothing to configure.</p></div></li>
+      <li><div><h3>Check the data-quality panel</h3><p>What was missing, corrupted, duplicated or out of order.</p></div></li>
+      <li><div><h3>Play at 10×</h3><p>Watch the status banner, pack map and alerts as faults develop.</p></div></li>
+      <li><div><h3>Open the worst alert</h3><p>Diagnosis, forecast, action; click the module for its detail and trend.</p></div></li>
+      <li><div><h3>Jump between alerts on the timeline</h3><p>Then show the event log and export it to CSV.</p></div></li>
+      <li><div><h3>Change a threshold</h3><p>The whole file is re-analysed instantly.</p></div></li>
+    </ol>
+    <div class="stack" style="gap:14px">
+      <div class="crop"><img src="img/overview.png" alt="Dashboard" /></div>
+      <p class="cap" style="margin-top:0"><b style="color:var(--text)">If the file cannot be read</b>, the app explains why and keeps the previous dataset on screen. Runs fully offline from a local build.</p>
+    </div>
+  </div>
+  <div class="footer"><img src="img/batter-eye.svg" alt="" /><span class="brand">Batter-eye</span><span class="rubric">Reliability on unseen data</span><span class="num">14</span></div>
+</section>
+
+<!-- 15. Close -->
+<section class="slide close title-slide">
+  <img class="bleed" src="img/tp_alerts.png" alt="" style="width:640px;right:-40px;top:230px" />
+  <div class="glow"></div>
+  <div class="logo-row" style="margin-bottom:34px"><img src="img/batter-eye.svg" alt="Batter-eye logo" style="width:84px;height:84px" /><span style="font-size:30px;font-weight:700;letter-spacing:-0.02em">Batter-eye</span></div>
+  <h1>Thank you.<br /><span class="muted">Questions?</span></h1>
+  <p style="font-size:27px;margin-top:36px;letter-spacing:-0.01em;max-width:1000px">Catch the faulty module early, explain it clearly, and never cry wolf.</p>
+  <div class="accent-rule"></div>
+  <p style="font-size:18px;color:var(--muted);margin-top:26px;line-height:1.7">README · docs/DETECTION_LOGIC.md · docs/DATA_ANALYSIS.md · <code>npm test</code><br />mnkjoshi.github.io/UAEC2026</p>
+</section>
+
+</body>
+</html>
