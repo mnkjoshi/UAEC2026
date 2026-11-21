@@ -47,6 +47,8 @@ interface DashboardState {
   /** Alert id → severity at the time it was acknowledged (re-alerts if it escalates). */
   acknowledged: Record<string, Severity>;
   soundOn: boolean;
+  /** Browser (desktop) notifications for new critical alerts. */
+  desktopAlerts: boolean;
   settingsOpen: boolean;
   config: DetectionConfig;
 
@@ -64,6 +66,7 @@ interface DashboardState {
   acknowledge: (alertId: string, severity: Severity) => void;
   acknowledgeAll: () => void;
   toggleSound: () => void;
+  toggleDesktopAlerts: () => Promise<void>;
   setSettingsOpen: (open: boolean) => void;
   updateConfig: (config: DetectionConfig) => void;
 }
@@ -107,6 +110,7 @@ export const useDashboard = create<DashboardState>((set, get) => {
     chartMetric: 'temperature',
     acknowledged: {},
     soundOn: false,
+    desktopAlerts: false,
     settingsOpen: false,
     config: cloneDefaultConfig(),
 
@@ -157,6 +161,13 @@ export const useDashboard = create<DashboardState>((set, get) => {
       set({ acknowledged: { ...acknowledged, ...Object.fromEntries(alerts.map((a) => [a.id, a.severity])) } });
     },
     toggleSound: () => set({ soundOn: !get().soundOn }),
+    toggleDesktopAlerts: async () => {
+      if (get().desktopAlerts) return set({ desktopAlerts: false });
+      if (typeof Notification === 'undefined') return set({ error: 'This browser does not support desktop notifications.' });
+      const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
+      if (permission === 'granted') set({ desktopAlerts: true });
+      else set({ error: 'Desktop notifications are blocked. Allow them in the browser\'s site settings to use this.' });
+    },
     setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
     updateConfig: (config) => {
       set({ config });

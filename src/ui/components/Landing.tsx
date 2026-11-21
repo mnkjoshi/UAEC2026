@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useFleet } from '../fleetStore';
 import { useDashboard, type ScenarioEntry } from '../store';
 import { PackHero } from './PackHero';
 
@@ -11,8 +12,10 @@ export function Landing() {
   const generated = scenarios.filter((s) => s.source !== 'provided');
   const featured = scenarios.find((s) => s.id === 'thermal_propagation') ?? scenarios.find((s) => s.id === 'thermal_rise');
 
-  const openFile = async (file: File | undefined) => {
-    if (file) useDashboard.getState().loadCsvText(await file.text(), file.name);
+  /** One file opens the pack dashboard; several open the fleet view (one bus per file). */
+  const openFiles = async (files: File[]) => {
+    if (files.length > 1) useFleet.getState().loadFiles(files);
+    else if (files[0]) useDashboard.getState().loadCsvText(await files[0].text(), files[0].name);
   };
 
   return (
@@ -45,9 +48,22 @@ export function Landing() {
                 Replay a thermal event
               </button>
             )}
-            <input ref={fileInput} type="file" accept=".csv,text/csv,text/plain" hidden onChange={(e) => openFile(e.target.files?.[0])} />
+            <button type="button" className="l-btn" onClick={() => useFleet.getState().loadDemoFleet(scenarios)}>
+              Open demo fleet
+            </button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".csv,text/csv,text/plain"
+              multiple
+              hidden
+              onChange={(e) => {
+                openFiles([...(e.target.files ?? [])]);
+                e.target.value = '';
+              }}
+            />
           </div>
-          <p className="l-hint">Or drop a CSV anywhere on this page. Messy files are fine: problems are reported, not fatal.</p>
+          <p className="l-hint">Or drop a CSV anywhere on this page. Drop several to compare a fleet, one bus per file. Messy files are fine: problems are reported, not fatal.</p>
         </div>
         <PackHero />
       </section>
