@@ -520,6 +520,7 @@ class DetectionEngine:
         lim_fc = cfg["forecast"]
         hyst_frac = cfg["lifecycle"]["hysteresis_clear_margin_fraction"]
 
+        # stuck values and spikes
         integ_state = {
             m: {
                 "last_T": None,
@@ -537,6 +538,7 @@ class DetectionEngine:
         volt_hist: Dict[str, List[Tuple[float, float]]] = {m: [] for m in module_ids}
         pack_cur_hist: List[Tuple[float, float]] = []
 
+        # alert lifecyle tracking structures
         conditions: Dict[str, Dict[str, Any]] = {}
         alerts: List[Dict[str, Any]] = []
         alerts_by_id: Dict[str, Dict[str, Any]] = {}
@@ -550,6 +552,7 @@ class DetectionEngine:
             healthy_T, healthy_V, healthy_I, healthy_SOC, healthy_SOH = [], [], [], [], []
             healthy_mod_count = 0
 
+            # sensor filtering
             for m in module_ids:
                 row = tick["rowsByModule"].get(m)
                 st = integ_state[m]
@@ -572,6 +575,7 @@ class DetectionEngine:
                 if not row["sensorStatusOk"]:
                     faults.append("status_not_ok")
 
+                # validate temperature
                 clean_T = None
                 if row["T"] is None:
                     faults.append("missing_temperature")
@@ -597,6 +601,7 @@ class DetectionEngine:
                     if stuck_t:
                         faults.append("stuck_temperature")
 
+                    # check for spikes
                     rej_jump = False
                     if st["spike_T"] is not None:
                         st["spike_T"]["age"] += 1
@@ -632,6 +637,7 @@ class DetectionEngine:
                         clean_T = tv
                         st["last_T"] = tv
 
+                # validate the voltage
                 clean_V = None
                 if row["V"] is None:
                     faults.append("missing_voltage")
@@ -692,6 +698,7 @@ class DetectionEngine:
                         clean_V = vv
                         st["last_V"] = vv
 
+                # validate aux
                 clean_I = (
                     row["I"]
                     if (row["I"] is not None and abs(row["I"]) <= lim_int["current_abs_max_a"])
@@ -743,6 +750,7 @@ class DetectionEngine:
                     "faults": faults,
                 }
 
+            # baselines & signal extraction
             med_T = statistics.median(healthy_T) if healthy_T else None
             med_V = statistics.median(healthy_V) if healthy_V else None
             med_I = statistics.median(healthy_I) if healthy_I else None
@@ -767,6 +775,7 @@ class DetectionEngine:
                 )
                 sigs: List[Dict[str, Any]] = []
 
+                # rate of change and forecast
                 slope_T = (
                     ols_slope_per_min(
                         temp_hist[m],
@@ -814,6 +823,7 @@ class DetectionEngine:
                     else None
                 )
 
+                # time critical forecasts
                 t_fc = (
                     build_forecast(
                         m,
@@ -851,6 +861,7 @@ class DetectionEngine:
                     else None
                 )
 
+                # absolute thresholds with hysteresis
                 if T is not None:
                     clear_t = lim_abs["temp_warning_c"] - hyst_frac * (
                         lim_abs["temp_warning_c"] - lim_abs["temp_nominal_c"]
@@ -949,6 +960,7 @@ class DetectionEngine:
                             {"code": "abs_soh_low", "severity": "warning", "recovered": True}
                         )
 
+                # current spikes relative to rolling pack median
                 if I is not None and roll_med_I is not None and roll_med_I > 1e-3:
                     ratio = abs(I) / roll_med_I
                     clear_r = lim_abs["current_warning_multiplier"] - hyst_frac * (
@@ -971,6 +983,7 @@ class DetectionEngine:
                             {"code": "rel_current_high", "severity": "warning", "recovered": True}
                         )
 
+                # avaluate peer-deviation limits against instantaneous pack medians
                 if T is not None and med_T is not None:
                     dt_med = T - med_T
                     clear_dt = lim_rel["temp_above_median_warning_c"] * (1.0 - hyst_frac)
@@ -1015,6 +1028,7 @@ class DetectionEngine:
                             {"code": "rel_volt_deviation", "severity": "warning", "recovered": True}
                         )
 
+                # check rate of change signals
                 if slope_T is not None:
                     clear_st = lim_rate["temp_rise_warning_c_per_min"] * (1.0 - hyst_frac)
                     if slope_T > lim_rate["temp_rise_warning_c_per_min"]:
@@ -1058,9 +1072,11 @@ class DetectionEngine:
 
                 signals_by_mod[m] = sigs
 
+            # causal diagnosis
             findings: List[Dict[str, Any]] = []
             data_loss_mods: List[str] = []
 
+            # sensor and communication data faults
             for m in module_ids:
                 integ = integrity_by_mod[m]
                 if integ["isMissingRow"]:
@@ -1096,6 +1112,7 @@ class DetectionEngine:
                 }:
                     data_loss_mods.append(m)
 
+            # spread a loss to a pack level bus fault
             if len(data_loss_mods) >= 2 and (
                 len(data_loss_mods) / max(len(module_ids), 1)
             ) >= cfg["diagnosis"]["pack_comms_loss_fraction_threshold"]:
@@ -1132,6 +1149,7 @@ class DetectionEngine:
                             }
                         )
 
+            # group modules by symptoms
             heat_mods, vdrop_mods, overv_mods, lowsoc_mods, lowsoh_mods, overcur_mods = (
                 [],
                 [],
@@ -1168,6 +1186,7 @@ class DetectionEngine:
                 if any(s["code"] == "rel_current_high" for s in act):
                     overcur_mods.append(m)
 
+            # heat and voltage drop cooresponds to an internal short
             ishort_mods = set(heat_mods) & set(vdrop_mods)
             for m in sorted(ishort_mods, key=module_sort_key):
                 act = [s for s in signals_by_mod[m] if not s["recovered"]]
@@ -1183,6 +1202,7 @@ class DetectionEngine:
                     }
                 )
 
+            # isolated heat event is a warning while cluster is an event
             pure_heat = [m for m in heat_mods if m not in ishort_mods]
             h_count = max(healthy_mod_count, 1)
             if (
@@ -1250,6 +1270,7 @@ class DetectionEngine:
                             }
                         )
 
+            # remaining single-module and pack-level findings
             for m in [x for x in vdrop_mods if x not in ishort_mods]:
                 vsigs = [
                     s
@@ -1348,11 +1369,13 @@ class DetectionEngine:
                     }
                 )
 
+            # alert the state machine
             present_keys: Set[str] = set()
             for a in alerts:
                 if a["state"] == "raised":
                     a["state"] = "active"
 
+            # clear trivial alerts when severe is present
             for f in findings:
                 for ckey in list(conditions.keys()):
                     ex_rule = ckey.split("::")[0]
@@ -1374,6 +1397,7 @@ class DetectionEngine:
                             ex_alert["supersededBy"] = f["ruleId"]
                         del conditions[ckey]
 
+            # process active findings
             for f in findings:
                 key = f"{f['ruleId']}::{f['targetKey']}"
                 present_keys.add(key)
@@ -1410,6 +1434,7 @@ class DetectionEngine:
                     )
                 )
 
+                # update existing alerts
                 if cond["alertId"] and cond["alertId"] in alerts_by_id:
                     ex = alerts_by_id[cond["alertId"]]
                     if ex["state"] != "cleared":
@@ -1423,6 +1448,7 @@ class DetectionEngine:
                             ex["escalatedAtIso"] = ts_iso
                         continue
 
+                # raise new alerts if thresholds surpassed
                 if cond["trigger"] >= req:
                     aid = f"ALT-{len(alerts) + 1:04d}"
                     new_alert = {
@@ -1446,6 +1472,7 @@ class DetectionEngine:
                     alerts_by_id[aid] = new_alert
                     cond["alertId"] = aid
 
+            # evaluate recovery conditions
             for key in list(conditions.keys()):
                 if key in present_keys:
                     continue
@@ -1454,6 +1481,7 @@ class DetectionEngine:
                 ex = alerts_by_id.get(cond["alertId"]) if cond["alertId"] else None
                 aff_mods = ex["affectedModules"] if ex else cond.get("modules", [])
 
+                # hold alerts during dropouts
                 if (
                     rule_id in HAZARD_RULES
                     and aff_mods
@@ -1464,6 +1492,7 @@ class DetectionEngine:
                         ex["updatedAtIso"] = ts_iso
                     continue
 
+                # return to clear if conditions are met
                 if rule_id not in HAZARD_RULES:
                     recovered = True
                 else:
