@@ -35,22 +35,21 @@
   text-align: left; cursor: pointer; font: inherit; color: inherit;
   display: flex; flex-direction: column; gap: 14px; padding: 18px 20px 16px;
   background: linear-gradient(180deg, var(--surface-2), var(--surface));
-  border: 1px solid var(--border); border-top: 4px solid var(--sev); border-radius: 14px;
+  border: 1px solid var(--border); border-radius: 14px;
   box-shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 6px 18px rgb(0 0 0 / 0.18);
   transition: box-shadow 200ms, border-color 200ms;
 }
 .bus-card:hover { box-shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 18px 40px rgb(0 0 0 / 0.38); }
 .bus-card.sev-critical {
   background: linear-gradient(180deg, color-mix(in srgb, var(--sev-critical) 11%, var(--surface-2)), var(--surface));
-  border-color: color-mix(in srgb, var(--sev-critical) 70%, var(--border)); border-top-color: var(--sev-critical);
+  border-color: color-mix(in srgb, var(--sev-critical) 60%, var(--border));
   animation: pulse-bg 2s ease-in-out infinite;
 }
 .bus-card.sev-warning {
   background: linear-gradient(180deg, color-mix(in srgb, var(--sev-warning) 8%, var(--surface-2)), var(--surface));
-  border-color: color-mix(in srgb, var(--sev-warning) 60%, var(--border)); border-top-color: var(--sev-warning);
+  border-color: color-mix(in srgb, var(--sev-warning) 50%, var(--border));
 }
-.bus-card.sev-data_fault { border-color: color-mix(in srgb, var(--sev-data-fault) 50%, var(--border)); border-top-color: var(--sev-data-fault); }
-.bus-card.sev-normal { border-top-color: color-mix(in srgb, var(--sev-normal) 75%, transparent); }
+.bus-card.sev-data_fault { border-color: color-mix(in srgb, var(--sev-data-fault) 45%, var(--border)); }
 
 .bus-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
 .bus-name { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.015em; }
