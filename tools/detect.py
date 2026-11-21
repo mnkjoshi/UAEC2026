@@ -237,12 +237,12 @@ def worst_severity(levels: List[str]) -> str:
 
 
 def ols_slope_per_min(
-    """ project the trajectory until the limits are reached """
     points: List[Tuple[float, float]],
     current_sec: float,
     window_sec: float,
     min_samples: int,
 ) -> Optional[float]:
+    """Least-squares slope (units per minute) over the recent window, used to project the trajectory towards the limits."""
     win = [(t, v) for (t, v) in points if current_sec - window_sec <= t <= current_sec]
     if len(win) < min_samples:
         return None
