@@ -15,9 +15,11 @@ Standard library only; no installs needed. Works on Python 3.9+.
 
 import csv
 import json
+import random
 from datetime import datetime
 from pathlib import Path
 from typing import Callable, Dict, List
+
 
 ROOT = Path(__file__).resolve().parent.parent
 BASE_CSV = ROOT / "public" / "scenarios" / "normal.csv"
