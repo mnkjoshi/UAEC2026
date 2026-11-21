@@ -1,14 +1,31 @@
 # Batter-eye: presentation script
 
-Two speakers, about 10 minutes, then the live demo and 5 minutes of questions.
+Two speakers: about 8½ minutes of slides, a **5-minute live demo**, a short close, then up to 5 minutes of questions.
 Deck: `Batter-eye_Presentation.pdf`. Lines in *[brackets]* are cues, not spoken.
 
 | Speaker | Slides | Time |
 |---|---|---|
-| **Manav** | 1, 2, 3, 4, 9, 10, 13, drives the demo | ~5:00 |
-| **Elijah** | 5, 6, 7, 8, 11, 12, narrates the demo, 15 | ~4:50 |
+| **Manav** | 1, 2, 3, 4, 9, 10, 13, drives the demo | ~4:30 + demo |
+| **Elijah** | 5, 6, 7, 8, 11, 12, narrates the demo, 15 | ~4:00 + demo |
 
 Five handovers, each by name. Aim to speak to the judges, not the screen.
+
+### Run of show
+
+Check the clock at the four checkpoints in bold. If you're more than 30 s behind, use the trims at the bottom.
+
+| Clock | Section | Who |
+|---|---|---|
+| 0:00 | 1–4: Intro, problem, dashboard, architecture | Manav |
+| **3:00** | 5–8: Thresholds, detectors, false alarms, data integrity | Elijah |
+| **6:05** | 9–10: Diagnosis, UI | Manav |
+| 7:35 | 11–12: Completeness, validation | Elijah |
+| 8:55 | 13: What we built next | Manav |
+| **9:25** | 14: **Live demo** (5:00) | Manav drives, Elijah narrates |
+| **14:25** | 15: Close | Elijah |
+| 14:40 | Questions (up to 5:00) | Both |
+
+The whole slot can run up to 35 minutes, so there's slack, but finishing the talk and demo in about 15 minutes leaves the judges fresh for questions.
 
 ---
 
@@ -176,7 +193,13 @@ Now let's try your data.
 
 *[click]*
 
-## 14. Live demo (Manav drives, Elijah narrates, ~3–5 min)
+## 14. Live demo (Manav drives, Elijah narrates, 5:00)
+
+Five timed beats. Elijah keeps an eye on the clock: if a beat runs over, he moves to the next line and Manav follows. The playback beat has the most room because the judges' file might be longer than ours.
+
+**Before the first beat:** the speed selector is already on **10×**. Our files are 6 minutes long, so at 10× they play in about 36 seconds. If the judges' file is much longer (say an hour), switch to **50×** or drag the scrubber, rather than waiting.
+
+### Beat 1: Load and check the data (0:00–0:45)
 
 **Elijah:** Manav will load your file now.
 
@@ -188,22 +211,43 @@ Now let's try your data.
 
 **Elijah:** First, the data-quality panel. *[Read what it says, e.g.:]* "It found N missing values and M duplicate rows, and it tells us exactly what it did with them." *If it's clean:* "This file is clean, so every reading is trusted."
 
-*[Manav scrolls back up and presses play at 10×.]*
+### Beat 2: Play it as if it were live (0:45–2:15)
+
+*[Manav scrolls back up and presses play.]*
 
 **Elijah:** We're replaying it as if it were live. Watch the banner and the pack map.
-*[When the first alert appears:]* There's our first alert: *[read the title]* on *[module]*. It was caught *[N]* seconds in.
+
+*[Let it run. Pause talking for a few seconds so the judges can watch.]*
+
+*[When the first alert appears, Manav pauses with the space bar.]*
+
+**Elijah:** There's our first alert: *[read the title]* on *[module]*. It was caught *[N]* seconds in.
+
+*[If nothing has happened by 1:45, Manav drags to the end. Then use the "no alerts" line below.]*
+
+### Beat 3: Open the alert (2:15–3:15)
 
 *[Manav clicks the alert's module tile.]*
 
-**Manav:** Here's the diagnosis, the forecast, and the action. The module detail shows why it fired. *[read the condition, e.g. "plus 6 degrees per minute"]*.
+**Manav:** Here's the diagnosis, the forecast, and the action. The module detail shows why it fired: *[read the condition, e.g. "plus 6 degrees per minute, 9 degrees above the pack"]*. And on the trend chart, you can see exactly when it started to pull away from the others.
 
-*[Manav clicks a marker on the timeline to jump to the next alert, then scrolls to the event log.]*
+### Beat 4: Every alert, and the record (3:15–4:15)
 
-**Manav:** Each tick on the timeline is an alert, so we can jump straight to them. The event log has the full history. *[click Export CSV]*
+*[Manav clicks a marker under the timeline to jump to the next alert.]*
 
-*[Optional, if time allows: Manav opens Thresholds, changes one value, applies.]*
+**Manav:** Each dot under the timeline is an alert, so we can jump straight to them. *[Read the next alert title if there is one.]*
 
-**Manav:** And if you want to see a different threshold, we change it here, and the whole file is re-analysed instantly.
+*[Manav scrolls to the event log.]*
+
+**Manav:** The event log has the full history: what was raised, updated, cleared, or ignored as a blip. *[click Export CSV]* And it exports for the maintenance team.
+
+### Beat 5: Change a threshold (4:15–5:00, skip if behind)
+
+*[Manav opens Thresholds, changes one value (for example, temperature warning 45 → 40), and applies.]*
+
+**Manav:** And if you want to explore a different threshold, we change it here, and the whole file is re-analysed instantly.
+
+*[Manav resets to defaults and closes the panel. Switch back to the slides.]*
 
 **If something unexpected happens, say it calmly:**
 - *No alerts at all:* "The pack stays normal throughout. That's the no-false-alarm behaviour: nothing in this file crossed a limit for long enough."
@@ -247,4 +291,14 @@ If one of you is mid-answer and the other can add something, wait, then add one 
 - Laptop charged; the dashboard running locally (`npm run build`, then `npm run preview`) so it doesn't depend on the venue's Wi-Fi.
 - The deck open on slide 1, the dashboard open in a second window, and the judging CSV easy to drag in.
 - Audible alarm **off**, unless you want the sound in the demo.
-- Run through it once out loud with a timer. Cut words from your own slides if you're over 10 minutes; don't rush.
+- Run through it once out loud with a timer, **including the demo** on one of the provided scenarios (for example Thermal propagation). Check that you hit the checkpoints in the run of show.
+
+### If you're running behind
+
+Trim in this order. Each saves about 20–40 seconds, and none loses a rubric point.
+1. Demo beat 5 (changing a threshold): just say "and every threshold is editable live."
+2. Slide 11 (completeness): one sentence. "You've seen the trends, module detail and the exportable event log; they're all here."
+3. Slide 13 (built after the deadline): one sentence, or skip it.
+4. Slide 6: drop the per-cell voltage line.
+
+Never cut slides 5, 7 or 8. The thresholds, false alarms and data integrity are what the judges will ask about.
