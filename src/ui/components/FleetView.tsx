@@ -23,7 +23,8 @@ export function FleetView() {
   const cursor = useFleet((s) => s.cursor);
   const playing = useFleet((s) => s.playing);
   const error = useFleet((s) => s.error);
-  const view = useFleet((s) => s.view);
+  const focusId = useFleet((s) => s.focusId);
+  const setFocus = useFleet((s) => s.setFocus);
   const { setCursor, setPlaying, openBus, exitFleet, loadFiles } = useFleet.getState();
   const speed = useDashboard((s) => s.speed);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -128,40 +129,34 @@ export function FleetView() {
           }}
         />
 
-        <div className="fleet-toolbar">
-          <h2>{view === 'map' ? 'Map' : 'Buses'}</h2>
-          <div className="segmented" role="tablist" aria-label="Fleet view">
-            {(['cards', 'map'] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                role="tab"
-                aria-selected={view === v}
-                className={view === v ? 'active' : ''}
-                onClick={() => useFleet.getState().setView(v)}
-              >
-                {view === v && <motion.span layoutId="seg-pill" className="seg-pill" transition={spring} />}
-                <span>{v === 'cards' ? 'Cards' : 'Map'}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <FleetMap buses={buses} cursor={cursor} onOpen={openBus} />
 
-        {view === 'map' ? (
-          <FleetMap buses={buses} cursor={cursor} onOpen={openBus} />
-        ) : (
-          <div className="fleet-grid">
-            {rows.map(({ bus, state }) => (
-              <BusCard key={bus.id} bus={bus} state={state} onOpen={() => openBus(bus.id)} />
-            ))}
-          </div>
-        )}
+        <div className="fleet-grid">
+          {rows.map(({ bus, state }) => (
+            <BusCard
+              key={bus.id}
+              bus={bus}
+              state={state}
+              focused={focusId === bus.id}
+              onFocus={(on) => setFocus(on ? bus.id : null)}
+              onOpen={() => openBus(bus.id)}
+            />
+          ))}
+        </div>
       </main>
     </div>
   );
 }
 
-function BusCard({ bus, state, onOpen }: { bus: Bus; state: ReturnType<typeof busState>; onOpen: () => void }) {
+interface BusCardProps {
+  bus: Bus;
+  state: ReturnType<typeof busState>;
+  focused: boolean;
+  onFocus: (on: boolean) => void;
+  onOpen: () => void;
+}
+
+function BusCard({ bus, state, focused, onFocus, onOpen }: BusCardProps) {
   const top = state.alerts[0];
   const k = state.kpis;
   return (
@@ -171,7 +166,11 @@ function BusCard({ bus, state, onOpen }: { bus: Bus; state: ReturnType<typeof bu
       transition={spring}
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.985 }}
-      className={`bus-card sev-${state.severity}`}
+      className={`bus-card sev-${state.severity}${focused ? ' focused' : ''}`}
+      onMouseEnter={() => onFocus(true)}
+      onMouseLeave={() => onFocus(false)}
+      onFocus={() => onFocus(true)}
+      onBlur={() => onFocus(false)}
       onClick={onOpen}
       aria-label={`Open ${bus.name}`}
     >

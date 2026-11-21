@@ -38,8 +38,8 @@ interface FleetState {
   playing: boolean;
   loading: boolean;
   error: string | null;
-  /** Card grid or map. */
-  view: 'cards' | 'map';
+  /** Bus highlighted on the map (hovered card or selected guidance item). */
+  focusId: string | null;
 
   loadDemoFleet: (scenarios: ScenarioEntry[]) => Promise<void>;
   loadFiles: (files: File[]) => Promise<void>;
@@ -48,7 +48,7 @@ interface FleetState {
   exitFleet: () => void;
   setCursor: (i: number) => void;
   setPlaying: (playing: boolean) => void;
-  setView: (view: 'cards' | 'map') => void;
+  setFocus: (id: string | null) => void;
 }
 
 /** Length of the longest bus recording, in frames. */
@@ -97,7 +97,7 @@ export const useFleet = create<FleetState>((set, get) => {
     playing: false,
     loading: false,
     error: null,
-    view: 'cards',
+    focusId: null,
 
     loadDemoFleet: async (scenarios) => {
       set({ loading: true });
@@ -134,6 +134,7 @@ export const useFleet = create<FleetState>((set, get) => {
         timeline: bus.timeline,
         sourceName: `${bus.name}: ${bus.sourceName}`,
         sourceText: bus.text,
+        busContext: { name: bus.name, routeLabel: bus.route, index: get().buses.indexOf(bus) },
         cursor: Math.min(get().cursor, last),
         playing: false,
         acknowledged: {},
@@ -156,7 +157,7 @@ export const useFleet = create<FleetState>((set, get) => {
       useDashboard.getState().unload();
     },
 
-    setView: (view) => set({ view }),
+    setFocus: (focusId) => set({ focusId }),
     setCursor: (i) => set({ cursor: Math.max(0, Math.min(fleetLength(get().buses) - 1, i)) }),
     setPlaying: (playing) => {
       if (playing && get().cursor >= fleetLength(get().buses) - 1) set({ cursor: 0 });

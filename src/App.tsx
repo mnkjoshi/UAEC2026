@@ -16,6 +16,7 @@ import { EscalationBanner } from './ui/components/EscalationBanner';
 import { EventLog } from './ui/components/EventLog';
 import { FleetView } from './ui/components/FleetView';
 import { KpiBar } from './ui/components/KpiBar';
+import { LocationPanel } from './ui/components/LocationPanel';
 import { ModuleDetail } from './ui/components/ModuleDetail';
 import { PackMap } from './ui/components/PackMap';
 import { PlaybackBar } from './ui/components/PlaybackBar';
@@ -53,7 +54,6 @@ export default function App() {
         await useFleet.getState().loadDemoFleet(useDashboard.getState().scenarios);
         const frame = params.get('frame');
         if (frame !== null) useFleet.setState({ cursor: frame === 'end' ? fleetLength(useFleet.getState().buses) - 1 : Number(frame), playing: false });
-        if (params.get('view') === 'map') useFleet.setState({ view: 'map' });
         return;
       }
       const entry = useDashboard.getState().scenarios.find((x) => x.id === params.get('scenario'));
@@ -141,6 +141,7 @@ export default function App() {
               </div>
               <div className="col-right">
                 <AlertPanel alerts={state.alerts} now={state.timestamp} modules={dataset.modules} />
+                <LocationPanel />
                 <ModuleDetail state={state} timeline={timeline} cursor={cursor} />
               </div>
             </div>

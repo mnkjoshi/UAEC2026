@@ -331,3 +331,15 @@ select { background: var(--surface-2); border: 1px solid var(--border); border-r
 .anum { display: inline-flex; align-items: baseline; gap: 0.25em; }
 .anum-unit { font-size: 0.8em; color: inherit; opacity: 0.85; }
 .alert-list { overflow-x: hidden; }
+
+/* ---------- Location (pack dashboard) ---------- */
+.alert-depot { display: flex; gap: 8px; align-items: flex-start; margin: 8px 0 0; font-size: 0.88rem; color: var(--text-muted); line-height: 1.45; }
+.alert-depot .icon { flex: none; margin-top: 2px; color: var(--sev); }
+.alert-depot strong { color: var(--text); font-weight: 600; }
+.location-panel .panel-head { margin-bottom: 10px; }
+.location-guide { margin-top: 12px; display: flex; flex-direction: column; gap: 3px; }
+.location-status { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); }
+.location-head { font-weight: 650; color: var(--sev); }
+.location-guide.sev-normal .location-head { color: var(--text); }
+.location-detail { font-size: 0.88rem; color: var(--text-muted); line-height: 1.45; }
+.location-disclaimer { margin-top: 8px; font-size: 0.76rem; color: var(--text-muted); opacity: 0.8; }

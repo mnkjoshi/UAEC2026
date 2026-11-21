@@ -1,7 +1,11 @@
 /** Simulated fleet geography: positions, nearest depot and driver guidance. */
 import { describe, expect, it } from 'vitest';
-import { busPosition, distanceKm, guidanceFor, nearestDepot, pointAlong, routeFor, DEPOTS, type LatLng } from '../src/ui/fleetGeo';
-import { runScenarioFile } from './helpers';
+import { busPosition, contextForDataset, distanceKm, guidanceFor, locationFor, nearestDepot, pointAlong, routeFor, DEPOTS, type LatLng } from '../src/ui/fleetGeo';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { DEFAULT_CONFIG, parseTelemetryCsv } from '../src/core';
+import { buildIncidentReport } from '../src/ui/report';
+import { runScenarioFile, SCENARIO_DIR } from './helpers';
 
 const DOWNTOWN: LatLng = [53.5444, -113.4909];
 const UNIVERSITY: LatLng = [53.5232, -113.5263];
@@ -65,5 +69,25 @@ describe('driver guidance', () => {
   it('gives no depot line for a normal bus', () => {
     const tl = runScenarioFile('normal.csv');
     expect(guidanceFor(tl.states[0], DOWNTOWN, false).depot).toBeNull();
+  });
+});
+
+describe('ETS garages and dataset locations', () => {
+  it('uses the four current ETS garages', () => {
+    expect(DEPOTS.map((d) => d.name)).toEqual(['Mitchell Garage', 'Kathleen Andrews Garage', 'Ferrier Garage', 'Centennial Garage']);
+  });
+
+  it('gives the same file the same simulated route every time', () => {
+    expect(contextForDataset('Thermal rise')).toEqual(contextForDataset('Thermal rise'));
+  });
+
+  it('puts the location and nearest garage in the incident report', () => {
+    const text = readFileSync(resolve(SCENARIO_DIR, 'thermal_rise.csv'), 'utf8');
+    const ds = parseTelemetryCsv(text, 'thermal_rise.csv');
+    const tl = runScenarioFile('thermal_rise.csv');
+    const loc = locationFor(tl, tl.states.length - 1, contextForDataset('Thermal rise'));
+    const html = buildIncidentReport(ds, tl, tl.states.length - 1, DEFAULT_CONFIG, 'Thermal rise', loc);
+    expect(html).toContain('Location (simulated)');
+    expect(html).toMatch(/Garage, ~[\d.]+ km direct/);
   });
 });

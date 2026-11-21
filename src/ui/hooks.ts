@@ -1,5 +1,6 @@
 /** Side-effect hooks: playback clock and the audible critical alarm. */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { contextForDataset, locationFor, type BusLocation } from './fleetGeo';
 import { isAcknowledged, useDashboard } from './store';
 
 /**
@@ -117,4 +118,16 @@ export function useCriticalAlarm() {
       // Audio unavailable (autoplay policy etc.): visual alerts still work.
     }
   }, [cursor, timeline, soundOn, playing]);
+}
+
+/** Where the current bus is (simulated) and what the driver should do, at the playback position. */
+export function useBusLocation(): BusLocation | null {
+  const timeline = useDashboard((s) => s.timeline);
+  const cursor = useDashboard((s) => s.cursor);
+  const sourceName = useDashboard((s) => s.sourceName);
+  const busContext = useDashboard((s) => s.busContext);
+  return useMemo(
+    () => (timeline ? locationFor(timeline, cursor, busContext ?? contextForDataset(sourceName ?? '')) : null),
+    [timeline, cursor, sourceName, busContext],
+  );
 }
