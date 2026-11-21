@@ -199,7 +199,9 @@ export function parseTelemetryCsv(text: string, name = 'dataset'): ParsedDataset
   if (quality.duplicateRows) notes.push(`${quality.duplicateRows} duplicate row(s) ignored (first reading kept).`);
   if (quality.outOfOrder) notes.push('Rows were out of time order and have been sorted.');
   if (quality.gaps) notes.push(`${quality.gaps} gap(s) in the telemetry longer than 3x the normal interval.`);
-  if (quality.invalidValues) notes.push(`${quality.invalidValues} non-numeric value(s) treated as missing.`);
+  if (quality.missingValues) notes.push(`${quality.missingValues} blank or missing value(s): shown as "—" and excluded from detection.`);
+  if (quality.invalidValues) notes.push(`${quality.invalidValues} non-numeric value(s) treated as corrupted.`);
+  if (quality.statusFlags) notes.push(`${quality.statusFlags} row(s) reported a non-OK sensor status.`);
   if (missingColumns.length) notes.push(`Column(s) not found: ${missingColumns.join(', ')}.`);
   if (ignored.length) notes.push(`Unrecognised column(s) ignored: ${ignored.join(', ')}.`);
   const missingPerFrame = frames.filter((f) => f.readings.size < modules.length).length;

@@ -130,6 +130,16 @@ Timestamp,Module ID,Temperature (C),Voltage (V),Current (A),State of charge (%),
 Column names are matched loosely (case, spacing, units and order do not matter), and only `Timestamp` and `Module ID` are required.
 Module IDs, module count and sample interval are read from the file, never hard-coded.
 
+## Documentation
+
+| Document | Contents |
+|---|---|
+| [docs/Presentation.pdf](docs/Presentation.pdf) | Presentation slides (source: `docs/presentation/slides.html`) |
+| [docs/DETECTION_LOGIC.md](docs/DETECTION_LOGIC.md) | Every threshold and rule, with justification and validation results |
+| [docs/DATA_ANALYSIS.md](docs/DATA_ANALYSIS.md) | What the provided datasets contain; the measured normal baseline |
+| [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md) | Original plan, roles and timeline |
+| [docs/figures/](docs/figures) | Plots of every scenario (from `tools/generate_scenarios.py --plot`) |
+
 ## Repository layout
 
 ```

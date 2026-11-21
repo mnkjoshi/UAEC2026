@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Battery Safety Monitor: UAEC 2026</title>
+<!--
+  Source for docs/Presentation.pdf. Regenerate with:
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --no-pdf-header-footer \
+     --print-to-pdf=docs/Presentation.pdf docs/presentation/slides.html
+-->
+<style>
+  @page { size: 1600px 900px; margin: 0; }
+  :root {
+    --bg: #0b1016; --surface: #121a23; --surface-2: #18222d; --border: #243140;
+    --text: #e6edf3; --muted: #8b98a5; --accent: #58a6ff;
+    --ok: #3fb950; --adv: #58a6ff; --data: #b392f0; --warn: #e3b341; --crit: #ff6b61;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 1600px; height: 900px; padding: 64px 80px; position: relative; overflow: hidden; page-break-after: always; break-after: page; display: flex; flex-direction: column; }
+  .slide:last-child { page-break-after: auto; }
+  .kicker { color: var(--accent); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; font-size: 18px; margin-bottom: 12px; }
+  h1 { font-size: 56px; margin: 0 0 20px; line-height: 1.1; }
+  h2 { font-size: 44px; margin: 0 0 28px; line-height: 1.15; }
+  p, li { font-size: 24px; line-height: 1.45; }
+  .muted { color: var(--muted); }
+  .footer { position: absolute; bottom: 26px; left: 80px; right: 80px; display: flex; justify-content: space-between; color: var(--muted); font-size: 15px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; flex: 1; min-height: 0; }
+  .cols.wide-right { grid-template-columns: 0.85fr 1.15fr; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px 26px; }
+  .card h3 { margin: 0 0 8px; font-size: 26px; }
+  .card p { margin: 0; font-size: 20px; color: var(--muted); }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .shot { width: 100%; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 18px 50px rgb(0 0 0 / 0.5); display: block; }
+  .shot-wrap { overflow: hidden; border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 20px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 16px; text-transform: uppercase; letter-spacing: 0.06em; }
+  td.num { font-family: var(--mono); }
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 999px; font-weight: 700; font-size: 17px; }
+  .ok { color: var(--ok); } .warn { color: var(--warn); } .crit { color: var(--crit); } .data { color: var(--data); } .adv { color: var(--adv); }
+  .bg-ok { background: rgb(63 185 80 / 0.15); color: var(--ok); } .bg-warn { background: rgb(227 179 65 / 0.15); color: var(--warn); }
+  .bg-crit { background: rgb(255 107 97 / 0.15); color: var(--crit); } .bg-data { background: rgb(179 146 240 / 0.15); color: var(--data); }
+  .bg-adv { background: rgb(88 166 255 / 0.15); color: var(--adv); }
+  .pipeline { display: flex; align-items: stretch; gap: 0; margin: 10px 0 30px; }
+  .stage { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 16px; text-align: center; }
+  .stage b { display: block; font-size: 21px; margin-bottom: 6px; }
+  .stage span { font-size: 16px; color: var(--muted); line-height: 1.35; display: block; }
+  .arrow { display: flex; align-items: center; padding: 0 8px; color: var(--accent); font-size: 30px; }
+  .big-stat { font-size: 72px; font-weight: 800; font-family: var(--mono); line-height: 1; }
+  ul.clean { list-style: none; padding: 0; margin: 0; }
+  ul.clean li { padding: 10px 0 10px 34px; position: relative; }
+  ul.clean li::before { content: '▸'; position: absolute; left: 4px; color: var(--accent); }
+  .title-slide { justify-content: center; background: radial-gradient(1200px 600px at 85% 20%, rgb(88 166 255 / 0.18), transparent), radial-gradient(900px 500px at 10% 100%, rgb(255 107 97 / 0.12), transparent), var(--bg); }
+  .title-slide h1 { font-size: 84px; }
+  .sev-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+  .callout { border-left: 5px solid var(--accent); padding: 12px 20px; background: var(--surface); border-radius: 8px; font-size: 22px; margin-top: 18px; }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="slide title-slide">
+  <div class="kicker">UAEC 2026 · Programming</div>
+  <h1>Battery Safety Monitor</h1>
+  <p style="font-size:32px;max-width:1100px" class="muted">An interactive BMS dashboard that tells an electric-bus operator what is wrong, where, how soon it becomes critical, and what to do.</p>
+  <div class="sev-row" style="margin-top:40px">
+    <span class="pill bg-ok">✓ Normal</span><span class="pill bg-adv">i Advisory</span><span class="pill bg-data">? Data fault</span><span class="pill bg-warn">! Warning</span><span class="pill bg-crit">✕ Critical</span>
+  </div>
+</section>
+
+<!-- 2. Problem -->
+<section class="slide">
+  <div class="kicker">The problem</div>
+  <h2>An operator under pressure needs three answers, instantly</h2>
+  <div class="grid3" style="margin-top:20px">
+    <div class="card"><h3 class="ok">1 · Is anything wrong?</h3><p>One glance at the screen, from across the room. No reading numbers.</p></div>
+    <div class="card"><h3 class="warn">2 · Where, and how bad?</h3><p>Which of 12 modules, how fast it is getting worse, and when it becomes critical.</p></div>
+    <div class="card"><h3 class="crit">3 · What do I do?</h3><p>A diagnosis and a concrete action, not a raw threshold breach.</p></div>
+  </div>
+  <div class="cols" style="margin-top:40px;grid-template-columns:1fr 1fr">
+    <div>
+      <p><strong>And the data cannot be trusted blindly.</strong> Sensors drop out, freeze and glitch. A broken sensor must not look like a fire, and a missing reading must not look safe.</p>
+    </div>
+    <div>
+      <p><strong>Judging uses an unseen dataset</strong> with new anomalies, missing values and edge cases, so nothing can be tuned to the sample files.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Battery Safety Monitor</span><span>2</span></div>
+</section>
+
+<!-- 3. Solution overview -->
+<section class="slide">
+  <div class="kicker">Our solution</div>
+  <h2>A control-room dashboard, read top to bottom in priority order</h2>
+  <div class="cols wide-right">
+    <ul class="clean">
+      <li><b>Status banner:</b> pack state in one word and one colour</li>
+      <li><b>Alert cards:</b> diagnosis, forecast, action, acknowledge</li>
+      <li><b>Pack map:</b> 12 modules in series order; troubled modules light up</li>
+      <li><b>KPIs + trends:</b> how we got here, where it is going</li>
+      <li><b>Event log + data quality:</b> audit trail; can I trust this data?</li>
+      <li><b>Live replay</b> of any CSV, drag and drop, 1–50× speed</li>
+    </ul>
+    <div class="shot-wrap"><img class="shot" src="img/hero.png" alt="Dashboard during thermal rise" /></div>
+  </div>
+  <div class="footer"><span>Battery Safety Monitor</span><span>3</span></div>
+</section>
+
+<!-- 4. Architecture -->
+<section class="slide">
+  <div class="kicker">Architecture</div>
+  <h2>A causal pipeline: engine and UI fully separated</h2>
+  <div class="pipeline">
+    <div class="stage"><b>Parser</b><span>Tolerant CSV ingest, data-quality report</span></div><div class="arrow">→</div>
+    <div class="stage"><b>Sensor integrity</b><span>Missing, stuck, out-of-range, spikes</span></div><div class="arrow">→</div>
+    <div class="stage"><b>Hazard detectors</b><span>Absolute · pack-relative · rate</span></div><div class="arrow">→</div>
+    <div class="stage"><b>Condition tracker</b><span>Persistence, hysteresis, freeze on dropout</span></div><div class="arrow">→</div>
+    <div class="stage"><b>Diagnosis</b><span>Root cause, action, forecast</span></div><div class="arrow">→</div>
+    <div class="stage"><b>Alert manager</b><span>Identity, escalate, merge, clear</span></div>
+  </div>
+  <div class="grid3">
+    <div class="card"><h3>Causal by design</h3><p>State at time t uses only data up to t. Replaying a file is identical to watching it live.</p></div>
+    <div class="card"><h3>Pure TypeScript engine</h3><p><code>src/core</code> has no UI code, is tested in isolation (50 tests), and is cross-checked by an independent Python implementation.</p></div>
+    <div class="card"><h3>Nothing hard-coded</h3><p>Module IDs, count, sample interval and voltage level (cell vs module) are read from the data. All thresholds live in one config.</p></div>
+  </div>
+  <div class="footer"><span>React · TypeScript · Vite · ECharts · Zustand · Vitest</span><span>4</span></div>
+</section>
+
+<!-- 5. Data analysis -->
+<section class="slide">
+  <div class="kicker">Starting point: the data</div>
+  <h2>We measured "normal" first, then set every relative limit at ~2× its worst case</h2>
+  <div class="cols">
+    <table>
+      <tr><th>Normal-data statistic</th><th>Worst case</th><th>Our limit</th></tr>
+      <tr><td>Temp deviation from pack median</td><td class="num">2.33 °C</td><td class="num warn">5 °C</td></tr>
+      <tr><td>Voltage deviation from median</td><td class="num">13 mV</td><td class="num warn">30 mV</td></tr>
+      <tr><td>Temperature rise rate</td><td class="num">0.86 °C/min</td><td class="num warn">2 °C/min</td></tr>
+      <tr><td>Voltage fall rate</td><td class="num">0.016 V/min</td><td class="num warn">0.05 V/min</td></tr>
+      <tr><td>Identical temp readings in a row</td><td class="num">2</td><td class="num data">6 = stuck</td></tr>
+      <tr><td>Identical voltage readings in a row</td><td class="num">4</td><td class="num data">9 = stuck</td></tr>
+    </table>
+    <div>
+      <table>
+        <tr><th>Fault</th><th>Relative rule fires</th><th>Fixed limit fires</th></tr>
+        <tr><td>M03 low voltage</td><td class="num ok">+10 s</td><td class="num crit">+2.5 min</td></tr>
+        <tr><td>M07 thermal rise</td><td class="num ok">+40 s</td><td class="num crit">+2 min</td></tr>
+        <tr><td>M04–M06 heating</td><td class="num ok">+70 s</td><td class="num crit">+2.8 min</td></tr>
+      </table>
+      <div class="callout">Comparing each module with the rest of the pack, and watching its rate of change, finds faults <b>1.5–2.5 minutes earlier</b> than fixed limits alone.</div>
+    </div>
+  </div>
+  <div class="footer"><span>docs/DATA_ANALYSIS.md</span><span>5</span></div>
+</section>
+
+<!-- 6. Detection -->
+<section class="slide">
+  <div class="kicker">Fault detection</div>
+  <h2>Three independent views of every module</h2>
+  <div class="grid3">
+    <div class="card"><h3>Absolute limits</h3><p>The safety backstop, from Li-ion datasheets. Catches whole-pack problems the relative view cannot.</p></div>
+    <div class="card"><h3>Pack-relative</h3><p>Deviation from the median module at the same instant. Adapts to ambient temperature and load. One bad module cannot skew it.</p></div>
+    <div class="card"><h3>Rate of change</h3><p>30 s least-squares slope on real timestamps. Sees a runaway trend minutes before any limit.</p></div>
+  </div>
+  <table style="margin-top:30px">
+    <tr><th>Check</th><th>Warning</th><th>Critical</th><th>Why</th></tr>
+    <tr><td>Temperature</td><td class="num warn">45 °C</td><td class="num crit">55 °C</td><td class="muted">Discharge limit 55–60 °C; degradation accelerates above ~45 °C</td></tr>
+    <tr><td>Cell voltage low / high</td><td class="num warn">3.40 / 4.15 V</td><td class="num crit">3.20 / 4.20 V</td><td class="muted">NMC cut-off ~3.0 V, charge limit 4.2 V</td></tr>
+    <tr><td>Temperature rise</td><td class="num warn">2 °C/min</td><td class="num crit">4 °C/min</td><td class="muted">2.3× the normal maximum</td></tr>
+    <tr><td>SOH</td><td class="num warn">80 %</td><td class="num crit">70 %</td><td class="muted">Traction-battery end-of-life standard</td></tr>
+  </table>
+  <div class="footer"><span>All thresholds editable live · docs/DETECTION_LOGIC.md</span><span>6</span></div>
+</section>
+
+<!-- 7. False alarms -->
+<section class="slide">
+  <div class="kicker">Reliability</div>
+  <h2>Engineered against false alarms</h2>
+  <div class="cols">
+    <ul class="clean">
+      <li><b>Persistence:</b> 3 samples for a warning, 2 for critical. One noisy sample can never alert.</li>
+      <li><b>Hysteresis:</b> must recover past the limit by a margin, for 3 samples, before clearing. No flicker.</li>
+      <li><b>Freeze on dropout:</b> if a sensor goes silent, its hazards neither clear nor progress. <i>Unknown is not safe.</i></li>
+      <li><b>One alert per problem:</b> alerts keep their identity as they grow, escalate or merge. No alert floods.</li>
+    </ul>
+    <div style="display:flex;flex-direction:column;gap:22px;justify-content:center">
+      <div class="card" style="text-align:center"><div class="big-stat ok">0</div><p>alerts on the normal dataset, at every timestamp</p></div>
+      <div class="card" style="text-align:center"><div class="big-stat">17/17</div><p>scenarios diagnosed as expected: 5 provided + 12 we generated</p></div>
+    </div>
+  </div>
+  <div class="footer"><span>Battery Safety Monitor</span><span>7</span></div>
+</section>
+
+<!-- 8. Data integrity -->
+<section class="slide">
+  <div class="kicker">Data integrity</div>
+  <h2>A broken sensor is not a battery fire</h2>
+  <div class="cols wide-right">
+    <div>
+      <ul class="clean">
+        <li>Missing, <b>stuck</b>, out-of-range, sentinel <code>-999</code>, corrupted <code>ERR</code>, single-sample spikes</li>
+        <li>Shown as <span class="data"><b>? Data fault</b></span>: purple, hatched, never red</li>
+        <li>Untrusted values excluded from detection <i>and</i> from the pack median</li>
+        <li>12 modules silent at once = <b>one</b> "Communication loss" alert</li>
+        <li>Messy files load: reordered columns, duplicates, bad timestamps, any module count, all reported in a data-quality panel</li>
+      </ul>
+    </div>
+    <div class="shot-wrap"><img class="shot" src="img/sensor.png" alt="Sensor dropout on M11" /></div>
+  </div>
+  <div class="footer"><span>Battery Safety Monitor</span><span>8</span></div>
+</section>
+
+<!-- 9. Diagnosis -->
+<section class="slide">
+  <div class="kicker">Diagnosis</div>
+  <h2>From "threshold exceeded" to root cause and action</h2>
+  <div class="cols wide-right">
+    <table style="font-size:18px">
+      <tr><th>Pattern</th><th>Diagnosis</th></tr>
+      <tr><td>One module heating</td><td>Isolated thermal event</td></tr>
+      <tr><td>Heating + voltage falling</td><td class="crit">Internal short circuit</td></tr>
+      <tr><td>Adjacent modules together</td><td>Cooling failure</td></tr>
+      <tr><td>Neighbours start later</td><td class="crit">Thermal propagation from Mxx</td></tr>
+      <tr><td>Whole pack rising</td><td>Cooling / ambient / load</td></tr>
+      <tr><td>One module voltage dropping</td><td>Cell degradation / connection</td></tr>
+      <tr><td>T/V missing, current flowing</td><td class="data">Sensor harness fault</td></tr>
+    </table>
+    <div class="shot-wrap"><img class="shot" src="img/propagation.png" alt="Thermal propagation from M07" /></div>
+  </div>
+  <div class="callout">Every alert carries a <b>forecast</b> ("M07 reaches 55 °C in ~44 s") and a concrete <b>action</b> for the driver or operator.</div>
+  <div class="footer"><span>Battery Safety Monitor</span><span>9</span></div>
+</section>
+
+<!-- 10. UI/UX -->
+<section class="slide">
+  <div class="kicker">UI / UX decisions</div>
+  <h2>Designed for a glance, under pressure</h2>
+  <div class="grid2">
+    <div class="card"><h3>Colour means something</h3><p>Dark, quiet base so colour is reserved for urgency. Healthy trend lines are grey; only troubled modules are coloured.</p></div>
+    <div class="card"><h3>Never colour alone</h3><p>Every state has an icon and a word (✓ i ? ! ✕), so it is safe for colour-blind operators and readable on a projector.</p></div>
+    <div class="card"><h3>Urgency is felt</h3><p>Unacknowledged criticals pulse; acknowledging calms them. Optional audible alarm. Respects reduced-motion settings.</p></div>
+    <div class="card"><h3>Physical layout</h3><p>Modules shown in series order, so heat spreading between neighbours is visible on the map, not just in a list.</p></div>
+    <div class="card"><h3>Answers before data</h3><p>Banner → alerts → map → trends → log. The most important information is read first.</p></div>
+    <div class="card"><h3>Operator in control</h3><p>Acknowledge, replay, scrub to any alert, export the log, tune thresholds and re-analyse instantly.</p></div>
+  </div>
+  <div class="footer"><span>Battery Safety Monitor</span><span>10</span></div>
+</section>
+
+<!-- 11. Validation -->
+<section class="slide">
+  <div class="kicker">Validation</div>
+  <h2>Tested against everything we could think the judges might try</h2>
+  <div class="cols">
+    <table style="font-size:18px">
+      <tr><th>Scenario</th><th>Result</th></tr>
+      <tr><td>Normal operations</td><td class="ok">No alerts</td></tr>
+      <tr><td>Low voltage (M03)</td><td class="crit">Critical, 20 s after onset</td></tr>
+      <tr><td>Thermal rise (M07)</td><td class="crit">Critical at 30.6 °C, 20 s after onset</td></tr>
+      <tr><td>Multiple heating</td><td class="crit">One M04–M06 cluster alert</td></tr>
+      <tr><td>Sensor failure</td><td class="data">Data fault, clears on recovery</td></tr>
+      <tr><td>Over-voltage · internal short</td><td class="crit">Diagnosed correctly</td></tr>
+      <tr><td>Propagation · pack-wide heating</td><td class="crit">Source module identified</td></tr>
+    </table>
+    <table style="font-size:18px">
+      <tr><th>Edge case</th><th>Result</th></tr>
+      <tr><td>Stuck sensor</td><td class="data">Stuck-sensor data fault</td></tr>
+      <tr><td>Single-sample spike</td><td class="ok">Ignored, logged</td></tr>
+      <tr><td>Comms loss (all modules)</td><td class="data">One alert, not 12</td></tr>
+      <tr><td>Missing module rows</td><td class="data">Dropout, no crash</td></tr>
+      <tr><td>Heating + sensor dropout</td><td class="crit">Alert kept through dropout</td></tr>
+      <tr><td>Corrupted / messy file</td><td class="ok">No false alarms, reported</td></tr>
+      <tr><td>Module-level voltage, 60 s cadence</td><td class="ok">Auto-adapts</td></tr>
+    </table>
+  </div>
+  <div class="callout">50 automated tests (<code>npm test</code>) + independent Python reference detector: 19/19 checks agree.</div>
+  <div class="footer"><span>Battery Safety Monitor</span><span>11</span></div>
+</section>
+
+<!-- 12. Demo -->
+<section class="slide">
+  <div class="kicker">Live demo</div>
+  <h2>Your dataset, live</h2>
+  <div class="cols wide-right">
+    <ol style="font-size:26px;line-height:1.8">
+      <li>Drag the judging CSV onto the page</li>
+      <li>Watch the banner, map and alerts as it plays</li>
+      <li>Click a module: trends, deviation, conditions</li>
+      <li>Jump to each alert on the timeline</li>
+      <li>Check the data-quality report</li>
+      <li>Export the alert log</li>
+    </ol>
+    <div class="shot-wrap"><img class="shot" src="img/welcome.png" alt="Welcome screen" /></div>
+  </div>
+  <div class="footer"><span>Battery Safety Monitor</span><span>12</span></div>
+</section>
+
+<!-- 13. Future -->
+<section class="slide">
+  <div class="kicker">Limitations & next steps</div>
+  <h2>Where we would take it next</h2>
+  <div class="grid2">
+    <div class="card"><h3>Fleet view</h3><p>Many buses side by side, ranked by risk, with drill-down into each pack.</p></div>
+    <div class="card"><h3>Live telemetry</h3><p>The engine already processes frame by frame; connect it to a CAN/MQTT stream instead of a CSV.</p></div>
+    <div class="card"><h3>Learned baselines</h3><p>Per-bus normal profiles and anomaly models on top of the explainable rules, never replacing them.</p></div>
+    <div class="card"><h3>Physical layout config</h3><p>Real module positions and cooling loops, so adjacency and propagation use the true geometry.</p></div>
+  </div>
+  <p class="muted" style="margin-top:28px">Limitations: adjacency assumes series order; absolute limits assume NMC chemistry (editable); forecasts are linear extrapolations.</p>
+  <div class="footer"><span>Battery Safety Monitor</span><span>13</span></div>
+</section>
+
+<!-- 14. Close -->
+<section class="slide title-slide">
+  <div class="kicker">Thank you</div>
+  <h1>Questions?</h1>
+  <p class="muted" style="font-size:28px">Catch the faulty module early, explain it clearly, and never cry wolf.</p>
+  <p class="muted" style="font-size:22px;margin-top:40px">README · docs/DETECTION_LOGIC.md · docs/DATA_ANALYSIS.md · <code>npm test</code></p>
+</section>
+
+</body>
+</html>
