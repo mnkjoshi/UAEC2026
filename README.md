@@ -64,5 +64,7 @@ Module IDs and the sample interval are read from the file, not hard-coded.
 data/            Provided competitor datasets (5 scenarios)
 docs/            Project documentation (and the final presentation PDF)
 documentation/   Official competition materials
-src/             Application source (in progress)
+src/core/        Detection engine and shared types (no UI code)
+src/ui/          React components and preview pages
+elijah/          Task brief for a teammate (to be removed before submission)
 ```
