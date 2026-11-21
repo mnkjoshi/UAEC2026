@@ -1,0 +1,50 @@
+[
+  {
+    "id": "normal",
+    "name": "Normal operations",
+    "file": "scenarios/normal.csv",
+    "description": "Provided dataset. All 12 modules operating normally.",
+    "expected": "No alerts.",
+    "source": "provided"
+  },
+  {
+    "id": "low_voltage",
+    "name": "Low voltage",
+    "file": "scenarios/low_voltage.csv",
+    "description": "Provided dataset. M03 voltage falls from 3.68 V to 3.30 V starting 12:02:30.",
+    "expected": "M03 voltage warning shortly after onset, escalating to critical.",
+    "source": "provided"
+  },
+  {
+    "id": "thermal_rise",
+    "name": "Thermal rise",
+    "file": "scenarios/thermal_rise.csv",
+    "description": "Provided dataset. M07 heats ~7.5 \u00b0C/min from 12:02:00 to ~60 \u00b0C.",
+    "expected": "M07 critical isolated thermal event with time-to-limit forecast.",
+    "source": "provided"
+  },
+  {
+    "id": "multiple_module_heating",
+    "name": "Multiple module heating",
+    "file": "scenarios/multiple_module_heating.csv",
+    "description": "Provided dataset. Adjacent modules M04\u2013M06 heat ~5 \u00b0C/min from 12:03:00.",
+    "expected": "One grouped cooling-failure / propagation alert covering M04\u2013M06.",
+    "source": "provided"
+  },
+  {
+    "id": "sensor_failure",
+    "name": "Sensor failure",
+    "file": "scenarios/sensor_failure.csv",
+    "description": "Provided dataset. M11 temperature and voltage missing for 100 s; single dropouts on M03 and M06.",
+    "expected": "M11 data-fault (not a hazard) that clears on recovery; M03/M06 dropouts logged only.",
+    "source": "provided"
+  },
+  {
+    "id": "whole_pack_heating",
+    "name": "Whole-pack heating",
+    "file": "scenarios/whole_pack_heating.csv",
+    "description": "All 12 modules heat at 3 \u00b0C/min from 12:02:00.",
+    "expected": "Pack-level warning for rapid temperature rise; no single-module outlier alerts.",
+    "source": "generated"
+  }
+]

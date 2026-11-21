@@ -66,5 +66,7 @@ docs/            Project documentation (and the final presentation PDF)
 documentation/   Official competition materials
 src/core/        Detection engine and shared types (no UI code)
 src/ui/          React components and preview pages
+tools/           Python scenario generator (synthetic fault datasets)
+public/scenarios Built-in scenarios shown in the app (provided + generated)
 elijah/          Task brief for a teammate (to be removed before submission)
 ```

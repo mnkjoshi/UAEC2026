@@ -1,79 +1,77 @@
-# Elijah's task: Module Tile component
+# Elijah's task: Scenario generator (Python)
 
-## What you're building
+## Why this matters
 
-The **module tile** is the small card that represents one battery module on the pack map.
-The dashboard shows 12 of them in a 2 × 6 grid. It's the first thing judges look at, so it needs to show
-**at a glance** which modules are fine and which are in trouble.
+On Sunday the judges hand us a CSV we've never seen, with "unfamiliar anomaly patterns, missing values and edge cases".
+If the dashboard crashes or raises false alarms on it, we lose points (Reliability ×2, Completeness ×4).
 
-Your job is purely visual: the tile is given its data and just displays it. No calculations needed.
+You'll write a Python script that **creates new fault scenarios** for us to test against.
+Each scenario becomes a CSV that shows up in the dashboard's **scenario picker**, so the team can replay it
+live, and we can show them in the demo ("here's how it handles a stuck sensor, a comms loss, a short circuit…").
 
-## Setup (5 minutes)
+No web code needed. Python standard library only.
+
+## Setup
 
 ```bash
 git pull
-npm install
-npm run dev        # open http://localhost:5173
+python3 tools/generate_scenarios.py
 ```
 
-You'll see 12 plain placeholder tiles built from mock data. Make them look good.
+That already works: it generates one example (`whole_pack_heating`) into `public/scenarios/`
+and registers it in `public/scenarios/index.json`.
 
 ## Files
 
-| File | What to do |
+| File | What it is |
 |---|---|
-| `src/ui/components/ModuleTile.tsx` | **Build this.** The placeholder is already there with the correct props. |
-| `src/ui/components/StatusBadge.tsx` | **Create this.** Small icon + text label for a severity; the tile uses it. |
-| `src/ui/components/ModuleTile.css` | Create if you want a stylesheet (or use CSS modules). |
-| `src/ui/demo/mockModules.ts` | Mock data. Edit freely to test different cases. |
-| `src/ui/demo/ModuleTileDemo.tsx` | The preview page with the 2 × 6 grid. Tweak the layout if needed. |
-| `src/index.css` | Colour variables (`--sev-normal`, `--sev-critical`, etc.). Use these; adjust them if you have a better palette. |
+| `tools/generate_scenarios.py` | **Your file.** Has helpers and one worked example (`whole_pack_heating`). Add your scenarios here. |
+| `public/scenarios/normal.csv` | The base data every scenario starts from (12 modules, 10 s steps, 12:00:00 → 12:05:50) |
+| `public/scenarios/index.json` | List of scenarios the app shows. Your script updates it automatically; don't edit by hand. |
+| `docs/DATA_ANALYSIS.md` | What normal data looks like and how the provided faults behave. **Read this first** (5 min). |
 
-**Don't change** `src/core/types.ts` without checking with the team; other code depends on it.
+## How to add a scenario
 
-## Props (already defined)
+1. Write a function `def my_scenario(rows) -> rows` that changes the rows (see `whole_pack_heating`).
+2. Add it to the `SCENARIOS` list with an id, display name, description, and **what the dashboard should do**.
+3. Run the script and open the CSV to check it looks right.
 
-```ts
-interface ModuleTileProps {
-  id: string;                 // "M07"
-  temperature: number | null; // °C, null = sensor missing
-  voltage: number | null;     // V
-  soc: number | null;         // state of charge %
-  severity: 'normal' | 'advisory' | 'warning' | 'critical' | 'data_fault';
-  label?: string;             // short reason, e.g. "Rising 7.5 °C/min"
-  selected?: boolean;
-  onClick?: () => void;
-}
-```
+Each `row` is a dict with keys `"Timestamp"`, `"Module ID"`, `"Temperature (C)"`, `"Voltage (V)"`,
+`"Current (A)"`, `"State of charge (%)"`, `"State of Health (%)"`, `"Sensor Status"`. All values are strings.
 
-## Requirements
+**Make faults realistic:** real faults build up gradually from an onset time. Use the helpers
+`start_time()` / `seconds_since_start()` like the example does.
 
-- [ ] **Module ID** shown large (e.g. `M07`)
-- [ ] **Temperature** (1 decimal, `°C`) and **voltage** (3 decimals, `V`) clearly readable; SOC smaller
-- [ ] Colour by severity using the CSS variables:
-  - normal → green
-  - advisory → blue
-  - warning → amber
-  - critical → red, with a **slow pulse** animation
-  - data_fault → purple with a **hatched/striped** background (so it reads as "unknown", not "danger")
-- [ ] **Always show an icon + word** next to the colour (`✓ Normal`, `ⓘ Advisory`, `⚠ Warning`, `⛔ Critical`, `? No data`). Colour alone is not enough for colour-blind users.
-- [ ] Show the `label` text when present
-- [ ] A `null` value shows `—`, never `0`, `NaN` or `null`
-- [ ] The **selected** tile has a clear outline/highlight
-- [ ] Hover effect, and it's a real `<button>` so it works with the keyboard
-- [ ] Tiles stay readable at roughly 140–180 px wide
+## Scenarios to build
 
-## Tips
+Do them in this order; the first group matters most.
 
-- Keep it simple and high-contrast; this will be shown on a projector.
-- The critical pulse should be noticeable but not frantic (about a 1.5 s cycle). Respect `prefers-reduced-motion`.
-- Look at the mock data: M03 is a warning, M07 critical, M11 data fault, M05 advisory. All four should be distinguishable from across a room.
+### Battery hazards
+
+- [ ] **`overvoltage`**: M09 voltage climbs from ~3.68 V to 4.25 V starting 12:02:00 (e.g. faulty charger / regen braking)
+- [ ] **`internal_short`**: M02 voltage drops ~0.1 V/min **and** temperature rises ~4 °C/min, both from 12:02:30
+- [ ] **`thermal_propagation`**: M07 heats ~6 °C/min from 12:01:30; 60 s later its neighbours M06 and M08 start heating ~3 °C/min
+- [ ] **`low_soc`**: SOC for all modules falls quickly to ~8 % by the end (fast drain)
+
+### Sensor / data problems
+
+- [ ] **`stuck_sensor`**: M08 temperature freezes at its 12:01:30 value for the rest of the file (everything else normal)
+- [ ] **`sensor_spike`**: M10 temperature reads `185.00` for one sample at 12:03:00, then returns to normal
+- [ ] **`comms_loss`**: every module has blank temperature **and** voltage and status `MISSING` from 12:03:00 to 12:03:30
+- [ ] **`missing_module`**: all rows for M05 are **deleted** (not blank) between 12:02:00 and 12:04:00
+- [ ] **`corrupted_values`**: scatter about 15 bad values across the file: `NaN`, `null`, `N/A`, `ERR`, `-999`, `abc`, empty
+- [ ] **`messy_format`**: rows shuffled out of order, ~5 duplicated rows, 2 unparseable timestamps, status values in mixed case (`ok`, `Ok`, `FAULT`)
+
+### Combined (hardest for the dashboard)
+
+- [ ] **`heating_with_dropout`**: M04 heats ~5 °C/min from 12:02:00 **and** its sensor drops out for 40 s in the middle. The dashboard must not "forget" it was heating.
 
 ## Done when
 
-- [ ] All five severities look clearly different on the demo page
-- [ ] M11 (missing sensors) shows `—` and looks like "no data", not "danger"
-- [ ] `npm run build` passes with no errors
+- [ ] `python3 tools/generate_scenarios.py` runs cleanly and creates every scenario
+- [ ] Each one has a clear `description` and `expected` in `index.json` (this becomes our test checklist and demo script)
+- [ ] You've opened a few CSVs and they look right
 - [ ] Committed and pushed (small commits are good; judges look at commit history)
 
-**Stretch:** a tiny temperature bar or sparkline inside the tile, or a tooltip with SOH and current on hover.
+**Stretch:** add a `--plot` option that uses matplotlib to save a PNG of temperature and voltage per module for each scenario
+into `docs/figures/`. These make great presentation slides.
