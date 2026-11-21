@@ -83,6 +83,20 @@ export function parseTimestamp(raw: string | undefined): Date | null {
     return new Date(Date.UTC(2000, 0, 1) + n * 1000); // seconds since start of recording
   }
 
+  // Time of day only ("12:00:10"): anchor to an arbitrary date.
+  const timeOnly = text.match(/^(\d{1,2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?$/);
+  if (timeOnly) {
+    const [, h, m, s = '0', frac = '0'] = timeOnly;
+    return new Date(2000, 0, 1, Number(h), Number(m), Number(s), Number(`0.${frac}`) * 1000);
+  }
+
+  // Day-first dates ("21/11/2026 12:00"), which Date() would reject or misread.
+  const dayFirst = text.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (dayFirst && Number(dayFirst[1]) > 12) {
+    const [, d, mo, y, h = '0', mi = '0', s = '0'] = dayFirst;
+    return new Date(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), Number(s));
+  }
+
   // "YYYY-MM-DD HH:MM:SS" is not ISO; the T makes every browser parse it as local time.
   const isoLike = text.replace(/^(\d{4}-\d{2}-\d{2})[ _](\d)/, '$1T$2');
   const parsed = new Date(isoLike);

@@ -56,6 +56,7 @@ export function TrendChart({ timeline, cursor, config }: { timeline: Timeline; c
         name: m.id,
         type: 'line',
         showSymbol: false,
+        sampling: 'lttb', // keeps long files (hours of data) smooth
         connectNulls: false,
         z: isSel ? 5 : troubled ? 4 : 2,
         lineStyle: { width: isSel ? 3 : troubled ? 2 : 1.2, color, opacity: isSel || troubled || !selected ? 1 : 0.55 },
