@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cloneDefaultConfig, type DetectionConfig } from '../../core';
 import { useDashboard } from '../store';
+import { Icon } from './Icon';
 
 /** Field definitions: label, unit, and a getter/setter path into the config. */
 type Path = [keyof DetectionConfig, ...string[]];
@@ -90,7 +91,7 @@ export function SettingsDrawer() {
         <header className="panel-head">
           <h2>Detection thresholds</h2>
           <button type="button" className="btn icon" onClick={() => setSettingsOpen(false)} aria-label="Close">
-            ✕
+            <Icon name="close" />
           </button>
         </header>
         <p className="muted small">

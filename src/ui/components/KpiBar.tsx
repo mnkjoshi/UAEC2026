@@ -21,7 +21,7 @@ export function KpiBar({ kpis, config, cellsInSeries }: { kpis: PackKpis; config
 
   const items: Kpi[] = [
     {
-      label: 'Max temperature',
+      label: 'Max temp',
       value: fmt(kpis.maxTemp?.value, 1, '°C'),
       sub: kpis.maxTemp?.moduleId,
       severity: level(kpis.maxTemp?.value, t.warn, t.crit, 'above'),
@@ -48,7 +48,7 @@ export function KpiBar({ kpis, config, cellsInSeries }: { kpis: PackKpis; config
     { label: 'Avg SOH', value: fmt(kpis.avgSoh, 1, '%'), severity: level(kpis.avgSoh ?? undefined, config.soh.low.warn, config.soh.low.crit, 'below') },
     { label: 'Pack current', value: fmt(kpis.meanCurrent, 1, 'A'), sub: 'module mean' },
     {
-      label: 'Sensors reporting',
+      label: 'Sensors',
       value: `${kpis.reportingModules}/${kpis.totalModules}`,
       severity: kpis.reportingModules < kpis.totalModules ? 'data_fault' : undefined,
     },

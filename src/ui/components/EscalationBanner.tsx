@@ -1,6 +1,7 @@
 import { fmtDuration } from '../format';
 import { useEscalation } from '../hooks';
 import { useDashboard } from '../store';
+import { Icon } from './Icon';
 
 /**
  * Shown when a critical alert has gone unacknowledged too long: in a real depot this is
@@ -14,7 +15,7 @@ export function EscalationBanner() {
   return (
     <section className="escalation" role="alert">
       <span className="esc-icon" aria-hidden>
-        ⚠
+        <Icon name="warningTriangle" size={22} />
       </span>
       <div className="esc-text">
         <strong>Escalated to depot supervisor.</strong>{' '}

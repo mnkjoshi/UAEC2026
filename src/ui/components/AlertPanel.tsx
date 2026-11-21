@@ -1,6 +1,7 @@
 import { describeModules, type Alert } from '../../core';
 import { fmtDuration, fmtTime } from '../format';
 import { isAcknowledged, useDashboard } from '../store';
+import { Icon } from './Icon';
 import { StatusBadge } from './StatusBadge';
 
 /**
@@ -30,7 +31,7 @@ export function AlertPanel({ alerts, now, modules }: { alerts: Alert[]; now: Dat
       {alerts.length === 0 ? (
         <div className="empty-alerts">
           <span className="big-check" aria-hidden>
-            ✓
+            <Icon name="check" size={26} />
           </span>
           <p>No active alerts</p>
           <p className="muted">All modules are within limits and reporting.</p>
@@ -60,7 +61,11 @@ export function AlertPanel({ alerts, now, modules }: { alerts: Alert[]; now: Dat
                   )}
                 </div>
                 <p className="alert-diagnosis">{a.diagnosis}</p>
-                {a.forecast && <p className="alert-forecast">⏱ {a.forecast}</p>}
+                {a.forecast && (
+                  <p className="alert-forecast">
+                    <Icon name="clock" size={15} /> {a.forecast}
+                  </p>
+                )}
                 <p className="alert-action">
                   <strong>Action:</strong> {a.action}
                 </p>
