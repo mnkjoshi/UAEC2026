@@ -123,7 +123,7 @@
   </div>
   <div class="grid3">
     <div class="card"><h3>Causal by design</h3><p>State at time t uses only data up to t. Replaying a file is identical to watching it live.</p></div>
-    <div class="card"><h3>Pure TypeScript engine</h3><p><code>src/core</code> has no UI code, is tested in isolation (50 tests), and is cross-checked by an independent Python implementation.</p></div>
+    <div class="card"><h3>Pure TypeScript engine</h3><p><code>src/core</code> has no UI code, is tested in isolation (58 tests), and is cross-checked by an independent Python implementation.</p></div>
     <div class="card"><h3>Nothing hard-coded</h3><p>Module IDs, count, sample interval and voltage level (cell vs module) are read from the data. All thresholds live in one config.</p></div>
   </div>
   <div class="footer"><span>React · TypeScript · Vite · ECharts · Zustand · Vitest</span><span>4</span></div>
@@ -275,7 +275,7 @@
       <tr><td>Module-level voltage, 60 s cadence</td><td class="ok">Auto-adapts</td></tr>
     </table>
   </div>
-  <div class="callout">50 automated tests (<code>npm test</code>) + independent Python reference detector: 19/19 checks agree.</div>
+  <div class="callout">58 automated tests (<code>npm test</code>, including 300 randomly corrupted files) + independent Python reference detector: 19/19 checks agree.</div>
   <div class="footer"><span>Battery Safety Monitor</span><span>11</span></div>
 </section>
 

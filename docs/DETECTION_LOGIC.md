@@ -143,7 +143,7 @@ Colour is always paired with an icon and a word (colour-blind safe), and animati
 
 ## 7. Validation
 
-Enforced by `npm test` (50 tests) and cross-checked by the independent Python implementation (`python3 tools/validate.py`).
+Enforced by `npm test` (58 tests) and cross-checked by the independent Python implementation (`python3 tools/validate.py`).
 
 | Scenario | Expected and observed |
 |---|---|

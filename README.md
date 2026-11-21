@@ -23,7 +23,7 @@ Playback starts automatically. Space = play/pause, ← / → = step.
 | Command | What it does |
 |---|---|
 | `npm run dev` | Start the dashboard with hot reload |
-| `npm test` | Run the 50 detection-engine tests |
+| `npm test` | Run the 58 detection-engine tests |
 | `npm run build` | Type-check and build a static site into `dist/` |
 | `npm run preview` | Serve the production build at http://localhost:4173 |
 | `npm run lint` | ESLint |
