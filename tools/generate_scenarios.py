@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Generate synthetic battery-telemetry scenarios for the dashboard.
 
@@ -9,24 +9,26 @@ picker.
 
 Usage (from the repo root):
     python3 tools/generate_scenarios.py
+    python3 tools/generate_scenarios.py --plot
 
 Standard library only; no installs needed. Works on Python 3.9+.
+Optional --plot flag uses matplotlib to save PNGs into docs/figures/.
 """
 
+import argparse
+import copy
 import csv
 import json
 import random
-import copy
-import argparse
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, List
-
+from typing import Dict, List
 
 ROOT = Path(__file__).resolve().parent.parent
 BASE_CSV = ROOT / "public" / "scenarios" / "normal.csv"
 OUT_DIR = ROOT / "public" / "scenarios"
 MANIFEST = OUT_DIR / "index.json"
+FIGURES_DIR = ROOT / "docs" / "figures"
 
 # Column names exactly as they appear in the provided data.
 TS = "Timestamp"
@@ -50,7 +52,7 @@ Row = Dict[str, str]
 
 def load_base() -> List[Row]:
     """Read the normal dataset as a list of dicts with clean (trimmed) headers."""
-    with BASE_CSV.open(newline="") as f:
+    with BASE_CSV.open(newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         return [{k.strip(): v.strip() for k, v in row.items()} for row in reader]
 
@@ -67,12 +69,12 @@ def start_time(rows: List[Row]) -> datetime:
 def write_scenario(scenario_id: str, name: str, description: str, expected: str, rows: List[Row]) -> None:
     """Write rows to public/scenarios/<scenario_id>.csv and register it in index.json."""
     path = OUT_DIR / f"{scenario_id}.csv"
-    with path.open("w", newline="") as f:
+    with path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=COLUMNS, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)
 
-    manifest = json.loads(MANIFEST.read_text())
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8")) if MANIFEST.exists() else []
     manifest = [s for s in manifest if s["id"] != scenario_id]  # replace if it already exists
     manifest.append({
         "id": scenario_id,
@@ -82,7 +84,7 @@ def write_scenario(scenario_id: str, name: str, description: str, expected: str,
         "expected": expected,
         "source": "generated",
     })
-    MANIFEST.write_text(json.dumps(manifest, indent=2) + "\n")
+    MANIFEST.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(f"  wrote {path.relative_to(ROOT)} ({len(rows)} rows)")
 
 
@@ -109,15 +111,13 @@ def whole_pack_heating(rows: List[Row]) -> List[Row]:
     return rows
 
 
-# TODO(Elijah): add the rest of the scenarios from elijah/TASK.md here,
-# following the same pattern as whole_pack_heating.
+# --- Battery hazards ---
 
 def overvoltage(rows: List[Row]) -> List[Row]:
-    """M09 voltage climbs from 3.68 V to 4.25 V starting 12:02:00"""
-    
+    """M09 voltage climbs from ~3.68 V to 4.25 V starting 12:02:00 (faulty charger / regen)."""
     start = start_time(rows)
-    onset_s = 120.0  #12:02:00
-    end_s = max(seconds_since_start(r, start) for r in rows)  #12:05:50
+    onset_s = 120.0  # 12:02:00
+    end_s = max(seconds_since_start(r, start) for r in rows)  # 350.0 s (12:05:50)
     duration_s = max(end_s - onset_s, 1.0)
 
     onset_v = 3.68
@@ -139,12 +139,12 @@ def overvoltage(rows: List[Row]) -> List[Row]:
             new_v = onset_v + total_rise * progress + ripple * (1.0 - 0.7 * progress)
             row[VOLT] = f"{new_v:.3f}"
     return rows
-    
+
+
 def internal_short(rows: List[Row]) -> List[Row]:
-    """M02 voltage drops 0.1 V/min and temperature rises 4 C/min from 12:02:30"""
-    
+    """M02 voltage drops ~0.1 V/min and temperature rises ~4 °C/min, both from 12:02:30."""
     start = start_time(rows)
-    onset_s = 150.0  #12:02:30
+    onset_s = 150.0  # 12:02:30
     v_drop_per_s = 0.1 / 60.0
     t_rise_per_s = 4.0 / 60.0
 
@@ -160,12 +160,12 @@ def internal_short(rows: List[Row]) -> List[Row]:
                 row[TEMP] = f"{float(row[TEMP]) + t_rise_per_s * dt:.2f}"
     return rows
 
+
 def thermal_propagation(rows: List[Row]) -> List[Row]:
-    """M07 heats 6 C/min from 12:01:30. After 60 s M06 and M08 heat 3 °C/min"""
-    
+    """M07 heats ~6 °C/min from 12:01:30; 60 s later neighbours M06 and M08 heat ~3 °C/min."""
     start = start_time(rows)
-    primary_onset_s = 90.0     #12:01:30
-    neighbour_onset_s = 150.0  #12:02:30
+    primary_onset_s = 90.0     # 12:01:30
+    neighbour_onset_s = 150.0  # 12:02:30
     primary_rate = 6.0 / 60.0
     neighbour_rate = 3.0 / 60.0
 
@@ -178,11 +178,11 @@ def thermal_propagation(rows: List[Row]) -> List[Row]:
             row[TEMP] = f"{float(row[TEMP]) + (t - neighbour_onset_s) * neighbour_rate:.2f}"
     return rows
 
+
 def low_soc(rows: List[Row]) -> List[Row]:
-    """SOC for all modules falls to 8 %"""
-    
+    """SOC for all modules falls quickly to ~8 % by the end (fast drain)."""
     start = start_time(rows)
-    end_s = max(seconds_since_start(r, start) for r in rows)  #350.0 s
+    end_s = max(seconds_since_start(r, start) for r in rows)  # 350.0 s
 
     for row in rows:
         t = seconds_since_start(row, start)
@@ -196,11 +196,13 @@ def low_soc(rows: List[Row]) -> List[Row]:
             row[CURRENT] = f"{float(row[CURRENT]) + 135.0 * min(progress * 5.0, 1.0):.2f}"
     return rows
 
+
+# --- Sensor / data problems ---
+
 def stuck_sensor(rows: List[Row]) -> List[Row]:
-    """M08 temperature freezes at its 12:01:30 value"""
-    
+    """M08 temperature freezes at its 12:01:30 value for the rest of the file."""
     start = start_time(rows)
-    freeze_s = 90.0  #12:01:30
+    freeze_s = 90.0  # 12:01:30
     frozen_temp = None
 
     for row in rows:
@@ -213,20 +215,20 @@ def stuck_sensor(rows: List[Row]) -> List[Row]:
             row[TEMP] = frozen_temp
     return rows
 
+
 def sensor_spike(rows: List[Row]) -> List[Row]:
-    """M10 temperature reads 185.00 for only one sample at 12:03:00"""
-    
+    """M10 temperature reads 185.00 for one sample at 12:03:00, then returns to normal."""
     start = start_time(rows)
-    spike_s = 180.0  #12:03:00
+    spike_s = 180.0  # 12:03:00
 
     for row in rows:
         if row[MODULE] == "M10" and seconds_since_start(row, start) == spike_s:
             row[TEMP] = "185.00"
     return rows
 
+
 def comms_loss(rows: List[Row]) -> List[Row]:
-    """every module has blank temperature, voltage and status missing from 12:03:00 to 12:03:30"""
-    
+    """Every module has blank temperature and voltage and status MISSING from 12:03:00 to 12:03:30."""
     start = start_time(rows)
     loss_start_s = 180.0  # 12:03:00
     loss_end_s = 210.0    # 12:03:30
@@ -239,20 +241,21 @@ def comms_loss(rows: List[Row]) -> List[Row]:
             row[STATUS] = "MISSING"
     return rows
 
+
 def missing_module(rows: List[Row]) -> List[Row]:
-    """all rows for M05 are deleted from 12:02:00 and 12:04:00"""
-    
+    """All rows for M05 are deleted (not blank) between 12:02:00 and 12:04:00."""
     start = start_time(rows)
-    drop_start_s = 120.0  #12:02:00
-    drop_end_s = 240.0    #12:04:00
+    drop_start_s = 120.0  # 12:02:00
+    drop_end_s = 240.0    # 12:04:00
 
     return [
         row for row in rows
         if not (row[MODULE] == "M05" and drop_start_s <= seconds_since_start(row, start) <= drop_end_s)
     ]
 
+
 def corrupted_values(rows: List[Row]) -> List[Row]:
-    """15 bad values across the file"""
+    """Scatter ~15 bad values across the file: NaN, null, N/A, ERR, -999, abc, empty."""
     rng = random.Random(42)
     bad_tokens = [
         "NaN", "null", "N/A", "ERR", "-999", "abc", "",
@@ -266,8 +269,9 @@ def corrupted_values(rows: List[Row]) -> List[Row]:
         rows[idx][col] = token
     return rows
 
+
 def messy_format(rows: List[Row]) -> List[Row]:
-    """rows shuffled"""
+    """Rows shuffled out of order, ~5 duplicated rows, 2 unparseable timestamps, mixed-case status."""
     rng = random.Random(99)
 
     for i, row in enumerate(rows):
@@ -276,11 +280,9 @@ def messy_format(rows: List[Row]) -> List[Row]:
         else:
             row[STATUS] = rng.choice(["ok", "Ok", "OK"])
 
-    #5 duplicated rows
     for idx in rng.sample(range(len(rows)), 5):
         rows.append(copy.deepcopy(rows[idx]))
 
-    #2 unparseable timestamps
     bad_ts_indices = rng.sample(range(12, len(rows) - 5), 2)
     rows[bad_ts_indices[0]][TS] = "INVALID_TIMESTAMP"
     rows[bad_ts_indices[1]][TS] = "2026-99-99 25:61:00"
@@ -288,13 +290,15 @@ def messy_format(rows: List[Row]) -> List[Row]:
     rng.shuffle(rows)
     return rows
 
+
+# --- Combined (hardest for the dashboard) ---
+
 def heating_with_dropout(rows: List[Row]) -> List[Row]:
-    """M04 heats 5 C/min from 12:02:00 and no sensor readings for 40 s"""
-    
+    """M04 heats ~5 °C/min from 12:02:00 and its sensor drops out for 40 s in the middle."""
     start = start_time(rows)
-    heat_onset_s = 120.0     #12:02:00
-    dropout_start_s = 190.0  #12:03:10
-    dropout_end_s = 220.0    #12:03:40
+    heat_onset_s = 120.0     # 12:02:00
+    dropout_start_s = 190.0  # 12:03:10
+    dropout_end_s = 220.0    # 12:03:40 (4 consecutive 10 s samples = 40 s window)
     rate_c_per_s = 5.0 / 60.0
 
     for row in rows:
@@ -309,7 +313,8 @@ def heating_with_dropout(rows: List[Row]) -> List[Row]:
             else:
                 row[TEMP] = f"{true_temp:.2f}"
     return rows
-    
+
+
 # ---------------------------------------------------------------------------
 # Registry: add each new scenario here.
 # (id, display name, function, one-line description, expected dashboard behaviour)
@@ -402,10 +407,13 @@ SCENARIOS: List[tuple] = [
     ),
 ]
 
-#plot using matplotlib
+
+# ---------------------------------------------------------------------------
+# Stretch goal: diagnostic plots (--plot)
+# ---------------------------------------------------------------------------
+
 def plot_scenario(scenario_id: str, name: str, rows: List[Row]) -> None:
-    """save a PNG of temperature and voltage per module into docs/figures/"""
-    
+    """Save a PNG of temperature and voltage per module into docs/figures/."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -469,10 +477,21 @@ def plot_scenario(scenario_id: str, name: str, rows: List[Row]) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Generate synthetic battery-telemetry scenarios.")
+    parser.add_argument(
+        "--plot",
+        action="store_true",
+        help="Save temperature and voltage plots per module into docs/figures/ (uses matplotlib).",
+    )
+    args = parser.parse_args()
+
     print(f"Generating {len(SCENARIOS)} scenario(s) from {BASE_CSV.relative_to(ROOT)}")
     for scenario_id, name, fn, description, expected in SCENARIOS:
-        rows = fn(load_base())  # fresh copy of the base data each time
+        rows = fn(load_base())
         write_scenario(scenario_id, name, description, expected, rows)
+        if args.plot:
+            plot_scenario(scenario_id, name, rows)
+            print(f"  saved docs/figures/{scenario_id}.png")
 
 
 if __name__ == "__main__":
