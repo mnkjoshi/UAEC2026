@@ -10,7 +10,9 @@ import { useEffect, useState } from 'react';
 import { AlertPanel } from './ui/components/AlertPanel';
 import { DataQualityPanel } from './ui/components/DataQualityPanel';
 import { ErrorBoundary } from './ui/components/ErrorBoundary';
+import { EscalationBanner } from './ui/components/EscalationBanner';
 import { EventLog } from './ui/components/EventLog';
+import { FleetView } from './ui/components/FleetView';
 import { KpiBar } from './ui/components/KpiBar';
 import { ModuleDetail } from './ui/components/ModuleDetail';
 import { PackMap } from './ui/components/PackMap';
@@ -20,7 +22,8 @@ import { StatusBanner } from './ui/components/StatusBanner';
 import { TopBar } from './ui/components/TopBar';
 import { TrendChart } from './ui/components/TrendChart';
 import { Landing } from './ui/components/Landing';
-import { useCriticalAlarm, usePlaybackClock } from './ui/hooks';
+import { useCriticalAlarm, useDesktopNotifications, usePlaybackClock } from './ui/hooks';
+import { fleetLength, useFleet } from './ui/fleetStore';
 import { useDashboard } from './ui/store';
 
 export default function App() {
@@ -32,14 +35,24 @@ export default function App() {
   const sourceName = useDashboard((s) => s.sourceName);
   const [dragging, setDragging] = useState(false);
 
+  const fleetActive = useFleet((s) => s.active);
+  const viewingBus = useFleet((s) => s.viewingBusId);
+
   usePlaybackClock();
   useCriticalAlarm();
+  useDesktopNotifications();
 
   // Load the scenario list; ?scenario=<id>&frame=<n> opens a scenario at a given moment (handy for demos).
   useEffect(() => {
     const s = useDashboard.getState();
     s.loadScenarios().then(async () => {
       const params = new URLSearchParams(window.location.search);
+      if (params.get('fleet') === 'demo') {
+        await useFleet.getState().loadDemoFleet(useDashboard.getState().scenarios);
+        const frame = params.get('frame');
+        if (frame !== null) useFleet.setState({ cursor: frame === 'end' ? fleetLength(useFleet.getState().buses) - 1 : Number(frame), playing: false });
+        return;
+      }
       const entry = useDashboard.getState().scenarios.find((x) => x.id === params.get('scenario'));
       if (!entry) return;
       await useDashboard.getState().loadScenario(entry);
@@ -72,8 +85,9 @@ export default function App() {
   const onDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) useDashboard.getState().loadCsvText(await file.text(), file.name);
+    const files = [...(e.dataTransfer.files ?? [])];
+    if (files.length > 1) useFleet.getState().loadFiles(files);
+    else if (files[0]) useDashboard.getState().loadCsvText(await files[0].text(), files[0].name);
   };
 
   const state = timeline?.states[cursor];
@@ -101,11 +115,14 @@ export default function App() {
       )}
 
       <ErrorBoundary>
-        {!timeline || !dataset || !state ? (
+        {fleetActive && !viewingBus ? (
+          <FleetView />
+        ) : !timeline || !dataset || !state ? (
           <Landing />
         ) : (
           <main className="dashboard">
             <StatusBanner state={state} />
+            <EscalationBanner />
             <PlaybackBar timeline={timeline} />
             <div className="grid-main">
               <div className="col-left">

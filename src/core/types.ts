@@ -181,7 +181,7 @@ export interface EventLogEntry {
   frameIndex: number;
   time: Date;
   severity: Severity;
-  kind: 'raised' | 'escalated' | 'downgraded' | 'cleared' | 'merged' | 'transient' | 'data';
+  kind: 'raised' | 'escalated' | 'downgraded' | 'updated' | 'cleared' | 'merged' | 'transient' | 'data';
   moduleIds: string[];
   message: string;
   alertId?: string;

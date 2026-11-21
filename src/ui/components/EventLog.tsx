@@ -7,6 +7,7 @@ const KIND_LABEL: Record<string, string> = {
   raised: 'Raised',
   escalated: 'Escalated',
   downgraded: 'Eased',
+  updated: 'Updated',
   cleared: 'Cleared',
   merged: 'Merged',
   transient: 'Ignored',

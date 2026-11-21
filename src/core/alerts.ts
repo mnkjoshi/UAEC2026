@@ -46,6 +46,7 @@ export class AlertManager {
           log(other, 'merged', `${other.title}: merged into ${existing.id} (${p.title})`);
         }
         const before = existing.severity;
+        const previousTitle = existing.title;
         Object.assign(existing, {
           moduleIds: [...p.moduleIds],
           severity: p.severity,
@@ -60,6 +61,9 @@ export class AlertManager {
           log(existing, 'escalated', `${p.title}: escalated to ${p.severity.replace('_', ' ').toUpperCase()}`);
         } else if (SEVERITY_RANK[p.severity] < SEVERITY_RANK[before]) {
           log(existing, 'downgraded', `${p.title}: eased to ${p.severity.replace('_', ' ')}`);
+        } else if (p.title !== previousTitle) {
+          // Same urgency, new understanding (e.g. isolated event → propagation).
+          log(existing, 'updated', `${previousTitle} → ${p.title}`);
         }
         continue;
       }

@@ -112,3 +112,10 @@ scenario('messy_format.csv', () => {
     expect(hazardAlerts(tl)).toEqual([]);
   });
 });
+
+scenario('thermal_propagation.csv', () => {
+  it('logs the change of diagnosis from isolated event to propagation', () => {
+    const tl = runScenarioFile('thermal_propagation.csv');
+    expect(tl.events.some((e) => e.kind === 'updated' && /Thermal propagation from M07/.test(e.message))).toBe(true);
+  });
+});

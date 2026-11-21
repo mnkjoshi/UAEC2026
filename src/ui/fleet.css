@@ -1,0 +1,58 @@
+/* Fleet overview, escalation banner and fleet-mode top bar. */
+
+.viewing { font-weight: 650; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.fleet { min-height: 100vh; display: flex; flex-direction: column; }
+.fleet-main { padding: 16px 20px 32px; display: flex; flex-direction: column; gap: 14px; animation: l-rise 450ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+.fleet-summary {
+  display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap;
+  padding: 16px 20px; border-radius: var(--radius); border: 1px solid var(--sev);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--sev) 22%, var(--surface)), var(--surface) 70%);
+}
+.fleet-headline { font-size: 1.35rem; font-weight: 800; font-variation-settings: 'wdth' 112; color: var(--sev); margin-bottom: 10px; }
+.fleet-bar { display: flex; gap: 3px; min-width: min(560px, 80vw); border-radius: 6px; overflow: hidden; }
+.fleet-bar .seg {
+  padding: 4px 10px; font-size: 0.8rem; font-weight: 650; white-space: nowrap;
+  background: color-mix(in srgb, var(--sev) 28%, var(--surface-2)); color: var(--text);
+  border-bottom: 3px solid var(--sev);
+}
+.fleet-clock { display: flex; flex-direction: column; align-items: flex-end; font-variant-numeric: tabular-nums; }
+.fleet-clock strong { font-size: 1.3rem; }
+
+.fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.bus-card {
+  text-align: left; cursor: pointer; font: inherit; color: inherit;
+  display: flex; flex-direction: column; gap: 12px; padding: 14px 16px;
+  background: var(--surface); border: 1px solid var(--border); border-top: 4px solid var(--sev); border-radius: var(--radius);
+  transition: transform 150ms, box-shadow 150ms, border-color 150ms;
+}
+.bus-card:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgb(0 0 0 / 0.35); border-color: var(--sev); }
+.bus-card.sev-critical { background: color-mix(in srgb, var(--sev-critical) 9%, var(--surface)); border-color: var(--sev-critical); animation: pulse-bg 1.5s ease-in-out infinite; }
+.bus-card.sev-warning { background: color-mix(in srgb, var(--sev-warning) 7%, var(--surface)); border-color: var(--sev-warning); }
+.bus-card.sev-data_fault { border-color: color-mix(in srgb, var(--sev-data-fault) 60%, var(--border)); }
+.bus-card.sev-normal { border-top-color: color-mix(in srgb, var(--sev-normal) 70%, transparent); }
+.bus-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.bus-name { font-weight: 800; font-size: 1.1rem; font-variation-settings: 'wdth' 110; }
+
+.bus-pack { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.bus-cell { height: 16px; border-radius: 3px; opacity: 0.85; transition: background 300ms; }
+.bus-cell.hot { outline: 2px solid var(--ring); outline-offset: 1px; opacity: 1; }
+
+.bus-alert { font-size: 0.9rem; min-height: 2.6em; line-height: 1.3; }
+.bus-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-weight: 650; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+.bus-kpis small { display: block; font-weight: 500; font-size: 0.72rem; color: var(--text-muted); }
+
+.escalation {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-radius: var(--radius);
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--sev-critical) 22%, var(--surface)) 0 14px, color-mix(in srgb, var(--sev-critical) 12%, var(--surface)) 14px 28px);
+  border: 2px solid var(--sev-critical);
+  animation: l-rise 300ms ease-out both;
+}
+.esc-icon { font-size: 1.4rem; color: var(--sev-critical); }
+.esc-text { flex: 1; }
+
+@media (max-width: 700px) {
+  .fleet-grid { grid-template-columns: minmax(0, 1fr); }
+  .fleet-bar { min-width: 0; width: 100%; flex-wrap: wrap; }
+}
