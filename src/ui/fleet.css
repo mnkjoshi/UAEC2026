@@ -1,75 +1,83 @@
-/* Fleet overview, escalation banner and fleet-mode top bar. Matches the landing page's language. */
+/* Fleet overview, escalation banner and fleet-mode top bar. */
 
 .viewing { font-weight: 650; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .fleet { min-height: 100vh; display: flex; flex-direction: column; }
-.fleet-main { width: 100%; max-width: 1440px; margin: 0 auto; padding: 24px 28px 48px; display: flex; flex-direction: column; gap: 18px; }
+.fleet-main {
+  width: 100%; max-width: 1440px; margin: 0 auto;
+  padding: 22px 24px 40px; display: flex; flex-direction: column; gap: 16px;
+  animation: l-rise 450ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
 
 /* ---------- Summary ---------- */
 .fleet-summary {
-  display: flex; flex-direction: column; gap: 20px;
-  padding: 26px 28px; border-radius: 14px;
+  display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding: 20px 24px; border-radius: 14px;
   border: 1px solid color-mix(in srgb, var(--sev) 45%, var(--border)); border-left: 6px solid var(--sev);
-  background: color-mix(in srgb, var(--sev) 8%, var(--surface));
+  background: color-mix(in srgb, var(--sev) 9%, var(--surface));
   transition: border-color 300ms, background 300ms;
 }
-.fleet-summary h1 { font-size: clamp(1.6rem, 2.6vw, 2.3rem); font-weight: 700; letter-spacing: -0.025em; line-height: 1.1; margin: 0 0 6px; color: var(--sev); }
-.fleet-summary p { margin: 0; }
-.fleet-bar { display: flex; gap: 4px; height: 34px; }
+.fleet-headline { font-size: 1.55rem; font-weight: 700; letter-spacing: -0.02em; color: var(--sev); margin-bottom: 14px; }
+.fleet-bar { display: flex; gap: 4px; min-width: min(600px, 80vw); }
 .fleet-bar .seg {
-  min-width: 0; overflow: hidden; border-radius: 6px; display: flex; align-items: center; padding: 0 12px;
-  font-size: 0.85rem; font-weight: 600; white-space: nowrap;
-  background: color-mix(in srgb, var(--sev) 22%, var(--surface-2)); border-bottom: 3px solid var(--sev);
+  padding: 6px 12px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; white-space: nowrap;
+  background: color-mix(in srgb, var(--sev) 20%, var(--surface-2)); color: var(--text);
+  border-bottom: 3px solid var(--sev);
+  transition: flex-grow 400ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.fleet-bar .seg.empty { padding: 0; margin-right: -4px; border-bottom-width: 0; }
-
-/* ---------- Groups ---------- */
-.fleet-group { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
-.fleet-group h2 { font-size: 1.05rem; font-weight: 650; margin: 0; display: flex; align-items: center; gap: 4px; }
-.fleet-empty { margin: 0; padding: 14px 16px; border: 1px dashed var(--border); border-radius: 10px; font-size: 0.92rem; }
-.fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 14px; }
+.fleet-clock { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-variant-numeric: tabular-nums; }
+.fleet-clock .muted { font-size: 0.85rem; }
+.fleet-clock strong { font-size: 1.55rem; font-weight: 700; letter-spacing: -0.01em; }
 
 /* ---------- Bus cards ---------- */
+.fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; }
 .bus-card {
-  position: relative; text-align: left; cursor: pointer; font: inherit; color: inherit;
+  text-align: left; cursor: pointer; font: inherit; color: inherit;
   display: flex; flex-direction: column; gap: 14px; padding: 18px 20px 16px;
   background: linear-gradient(180deg, var(--surface-2), var(--surface));
-  border: 1px solid var(--border); border-radius: 14px;
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset;
-  transition: border-color 200ms, box-shadow 200ms;
+  border: 1px solid var(--border); border-top: 4px solid var(--sev); border-radius: 14px;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 6px 18px rgb(0 0 0 / 0.18);
+  transition: box-shadow 200ms, border-color 200ms;
 }
-.bus-card:hover { border-color: #3a4d60; box-shadow: 0 18px 40px rgb(0 0 0 / 0.35); }
-.bus-card.sev-critical, .bus-card.sev-warning, .bus-card.sev-data_fault { border-left: 5px solid var(--sev); }
-.bus-card.sev-critical { background: linear-gradient(180deg, color-mix(in srgb, var(--sev-critical) 10%, var(--surface-2)), var(--surface)); }
-.bus-card.sev-warning { background: linear-gradient(180deg, color-mix(in srgb, var(--sev-warning) 8%, var(--surface-2)), var(--surface)); }
+.bus-card:hover { box-shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 18px 40px rgb(0 0 0 / 0.38); }
+.bus-card.sev-critical {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sev-critical) 11%, var(--surface-2)), var(--surface));
+  border-color: color-mix(in srgb, var(--sev-critical) 70%, var(--border)); border-top-color: var(--sev-critical);
+  animation: pulse-bg 2s ease-in-out infinite;
+}
+.bus-card.sev-warning {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sev-warning) 8%, var(--surface-2)), var(--surface));
+  border-color: color-mix(in srgb, var(--sev-warning) 60%, var(--border)); border-top-color: var(--sev-warning);
+}
+.bus-card.sev-data_fault { border-color: color-mix(in srgb, var(--sev-data-fault) 50%, var(--border)); border-top-color: var(--sev-data-fault); }
+.bus-card.sev-normal { border-top-color: color-mix(in srgb, var(--sev-normal) 75%, transparent); }
 
 .bus-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
 .bus-name { font-weight: 700; font-size: 1.2rem; letter-spacing: -0.015em; }
 .bus-route { color: var(--text-muted); font-size: 0.86rem; margin-top: 2px; }
 
-/* Mini pack, drawn like the landing preview: two rows of rounded cells in heat colour. */
+/* Mini pack: a dark tray of rounded cells in the same heat colours as the landing preview. */
 .bus-pack {
   display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px;
-  padding: 10px; border-radius: 10px; background: #0c141b; border: 1px solid var(--border);
+  padding: 9px; border-radius: 10px; background: #0c141b; border: 1px solid var(--border);
 }
 .bus-cell {
-  height: 22px; border-radius: 5px;
-  background: color-mix(in srgb, var(--heat) 70%, transparent);
-  border: 1px solid color-mix(in srgb, var(--heat) 90%, transparent);
+  height: 20px; border-radius: 5px;
+  background: color-mix(in srgb, var(--heat) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--heat) 92%, transparent);
   transition: background 400ms, border-color 400ms;
 }
-.bus-cell.flagged { outline: 2px solid var(--sev); outline-offset: 1px; }
+.bus-cell.hot { outline: 2px solid var(--ring); outline-offset: 1px; }
 .bus-cell.nodata {
   background: repeating-linear-gradient(135deg, rgb(179 146 240 / 0.35) 0 4px, transparent 4px 8px);
   border-color: var(--sev-data-fault);
 }
 
-.bus-alert { min-height: 2.9em; font-size: 0.93rem; line-height: 1.4; }
-.bus-alert-title { font-weight: 600; }
-.bus-forecast { color: var(--sev); font-size: 0.85rem; font-weight: 600; margin-top: 3px; }
+.bus-alert { font-size: 0.93rem; min-height: 2.8em; line-height: 1.4; }
 .bus-kpis {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding-top: 12px; border-top: 1px solid var(--border);
-  font-weight: 650; font-size: 0.95rem;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  padding-top: 12px; border-top: 1px solid var(--border);
+  font-weight: 650; font-variant-numeric: tabular-nums; font-size: 0.95rem;
 }
 .bus-kpis small { display: block; font-weight: 500; font-size: 0.74rem; color: var(--text-muted); margin-bottom: 2px; }
 
@@ -86,5 +94,5 @@
 @media (max-width: 700px) {
   .fleet-main { padding: 16px 14px 32px; }
   .fleet-grid { grid-template-columns: minmax(0, 1fr); }
-  .fleet-bar .seg span { display: none; }
+  .fleet-bar { min-width: 0; width: 100%; flex-wrap: wrap; }
 }
