@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useInView, useReducedMotion } from 'motion/react';
+import { heatColor } from '../heat';
 import { spring, springSlow } from '../motion';
 
 /**
@@ -41,23 +42,6 @@ function phaseAt(t: number): Phase {
   if (t < 8800) return 'isolated';
   if (t < 14600) return 'propagation';
   return 'cleared';
-}
-
-/** Coolant cyan → neutral → amber → red, interpolated through neutral so a warming cell never looks "healthy green". */
-const HEAT_STOPS: Array<[number, [number, number, number]]> = [
-  [0, [92, 200, 214]],
-  [0.25, [138, 151, 163]],
-  [0.55, [242, 165, 58]],
-  [1, [255, 59, 48]],
-];
-function heatColor(temp: number): string {
-  const x = Math.max(0, Math.min(1, (temp - 30) / (CRIT - 30)));
-  const i = HEAT_STOPS.findIndex(([stop]) => stop >= x);
-  if (i <= 0) return `rgb(${HEAT_STOPS[0][1].join(' ')})`;
-  const [a, ca] = HEAT_STOPS[i - 1];
-  const [b, cb] = HEAT_STOPS[i];
-  const k = (x - a) / (b - a);
-  return `rgb(${ca.map((v, j) => Math.round(v + (cb[j] - v) * k)).join(' ')})`;
 }
 
 /** The story is told at the real rates from the competition data (the animation runs faster). */
@@ -157,7 +141,7 @@ export function PackHero() {
                   top: `${((row * (CELL_H + GAP_Y)) / H) * 100}%`,
                   width: `${(CELL_W / W) * 100}%`,
                   height: `${(CELL_H / H) * 100}%`,
-                  ['--heat' as string]: heatColor(temp),
+                  ['--heat' as string]: heatColor(temp, 30, CRIT),
                 }}
               >
                 <span className="cell-id">{id}</span>
