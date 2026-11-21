@@ -6,6 +6,7 @@ import { heatColor } from '../heat';
 import { busState, fleetLength, useFleet, type Bus } from '../fleetStore';
 import { spring } from '../motion';
 import { useDashboard } from '../store';
+import { FleetMap } from './FleetMap';
 import { Icon } from './Icon';
 import { Logo } from './Logo';
 import { AnimatedNumber } from './AnimatedNumber';
@@ -22,6 +23,7 @@ export function FleetView() {
   const cursor = useFleet((s) => s.cursor);
   const playing = useFleet((s) => s.playing);
   const error = useFleet((s) => s.error);
+  const view = useFleet((s) => s.view);
   const { setCursor, setPlaying, openBus, exitFleet, loadFiles } = useFleet.getState();
   const speed = useDashboard((s) => s.speed);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -126,11 +128,34 @@ export function FleetView() {
           }}
         />
 
-        <div className="fleet-grid">
-          {rows.map(({ bus, state }) => (
-            <BusCard key={bus.id} bus={bus} state={state} onOpen={() => openBus(bus.id)} />
-          ))}
+        <div className="fleet-toolbar">
+          <h2>{view === 'map' ? 'Map' : 'Buses'}</h2>
+          <div className="segmented" role="tablist" aria-label="Fleet view">
+            {(['cards', 'map'] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={view === v}
+                className={view === v ? 'active' : ''}
+                onClick={() => useFleet.getState().setView(v)}
+              >
+                {view === v && <motion.span layoutId="seg-pill" className="seg-pill" transition={spring} />}
+                <span>{v === 'cards' ? 'Cards' : 'Map'}</span>
+              </button>
+            ))}
+          </div>
         </div>
+
+        {view === 'map' ? (
+          <FleetMap buses={buses} cursor={cursor} onOpen={openBus} />
+        ) : (
+          <div className="fleet-grid">
+            {rows.map(({ bus, state }) => (
+              <BusCard key={bus.id} bus={bus} state={state} onOpen={() => openBus(bus.id)} />
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

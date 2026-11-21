@@ -53,6 +53,7 @@ export default function App() {
         await useFleet.getState().loadDemoFleet(useDashboard.getState().scenarios);
         const frame = params.get('frame');
         if (frame !== null) useFleet.setState({ cursor: frame === 'end' ? fleetLength(useFleet.getState().buses) - 1 : Number(frame), playing: false });
+        if (params.get('view') === 'map') useFleet.setState({ view: 'map' });
         return;
       }
       const entry = useDashboard.getState().scenarios.find((x) => x.id === params.get('scenario'));
