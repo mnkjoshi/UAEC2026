@@ -46,5 +46,93 @@
     "description": "All 12 modules heat at 3 \u00b0C/min from 12:02:00.",
     "expected": "Pack-level warning for rapid temperature rise; no single-module outlier alerts.",
     "source": "generated"
+  },
+  {
+    "id": "overvoltage",
+    "name": "Overvoltage (M09)",
+    "file": "scenarios/overvoltage.csv",
+    "description": "M09 voltage climbs from ~3.68 V to 4.25 V starting at 12:02:00.",
+    "expected": "Single-module high-voltage warning (>4.15 V) escalating to critical overvoltage (>=4.20 V) on M09.",
+    "source": "generated"
+  },
+  {
+    "id": "internal_short",
+    "name": "Internal short circuit (M02)",
+    "file": "scenarios/internal_short.csv",
+    "description": "M02 voltage drops ~0.1 V/min and temperature rises ~4 \u00b0C/min from 12:02:30.",
+    "expected": "Correlated voltage sag and rapid heating alert on M02 diagnosing an internal short circuit.",
+    "source": "generated"
+  },
+  {
+    "id": "thermal_propagation",
+    "name": "Thermal propagation (M07 -> M06, M08)",
+    "file": "scenarios/thermal_propagation.csv",
+    "description": "M07 heats ~6 \u00b0C/min from 12:01:30; neighbours M06 and M08 heat ~3 \u00b0C/min starting 60 s later.",
+    "expected": "Critical thermal alarm on M07 first, followed by adjacent-module propagation alerts on M06 and M08.",
+    "source": "generated"
+  },
+  {
+    "id": "low_soc",
+    "name": "Fast drain / low SOC",
+    "file": "scenarios/low_soc.csv",
+    "description": "State of charge across all 12 modules falls rapidly from ~78 % to ~8 % by 12:05:50.",
+    "expected": "Pack-wide low-SOC warning (<20 %) escalating to critical reserve depletion (<10 %) without cell-fault false alarms.",
+    "source": "generated"
+  },
+  {
+    "id": "stuck_sensor",
+    "name": "Stuck temperature sensor (M08)",
+    "file": "scenarios/stuck_sensor.csv",
+    "description": "M08 temperature freezes at its 12:01:30 reading for the remainder of the run.",
+    "expected": "Sensor-fault warning for frozen/zero-variance telemetry on M08; no false overheating alarm.",
+    "source": "generated"
+  },
+  {
+    "id": "sensor_spike",
+    "name": "Single-sample sensor spike (M10)",
+    "file": "scenarios/sensor_spike.csv",
+    "description": "M10 temperature spikes to 185.00 \u00b0C for one sample at 12:03:00, then returns to normal.",
+    "expected": "Transient sensor glitch flagged on M10 without latching a persistent thermal runaway alarm.",
+    "source": "generated"
+  },
+  {
+    "id": "comms_loss",
+    "name": "Pack-wide comms loss",
+    "file": "scenarios/comms_loss.csv",
+    "description": "All modules have blank temperature/voltage and status MISSING from 12:03:00 to 12:03:30.",
+    "expected": "No crashes on blank values; pack-wide communications dropout alert during 12:03:00-12:03:30 and clean recovery at 12:03:40.",
+    "source": "generated"
+  },
+  {
+    "id": "missing_module",
+    "name": "Missing module rows (M05)",
+    "file": "scenarios/missing_module.csv",
+    "description": "All rows for M05 are omitted from the CSV between 12:02:00 and 12:04:00.",
+    "expected": "Missing-module heartbeat warning for M05 without breaking 12-module layout; automatic recovery at 12:04:10.",
+    "source": "generated"
+  },
+  {
+    "id": "corrupted_values",
+    "name": "Corrupted / malformed values",
+    "file": "scenarios/corrupted_values.csv",
+    "description": "15 bad tokens (NaN, null, N/A, ERR, -999, abc, empty) scattered across numeric fields.",
+    "expected": "Graceful sanitization of non-numeric strings and -999 sentinels with data-quality warnings and zero crashes.",
+    "source": "generated"
+  },
+  {
+    "id": "messy_format",
+    "name": "Messy format & out-of-order rows",
+    "file": "scenarios/messy_format.csv",
+    "description": "Rows shuffled out of order, 5 duplicates, 2 unparseable timestamps, and mixed-case status (ok, Ok, FAULT).",
+    "expected": "Chronological sorting, duplicate removal, safe skipping of 2 invalid timestamps, and case-insensitive status parsing.",
+    "source": "generated"
+  },
+  {
+    "id": "heating_with_dropout",
+    "name": "Heating with sensor dropout (M04)",
+    "file": "scenarios/heating_with_dropout.csv",
+    "description": "M04 heats ~5 \u00b0C/min from 12:02:00 with a 40 s sensor dropout (12:03:10 to 12:03:40) mid-event.",
+    "expected": "Retains M04 thermal rise state across the 40 s dropout and immediately escalates overheating upon sensor recovery.",
+    "source": "generated"
   }
 ]
