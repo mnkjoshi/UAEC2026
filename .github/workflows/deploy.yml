@@ -1,9 +1,10 @@
 # Builds, tests and publishes the dashboard to GitHub Pages.
-# Runs on demand (Actions tab → Deploy dashboard → Run workflow) once Pages is enabled
-# with "GitHub Actions" as the source.
+# Runs on every push to main, or on demand from the Actions tab.
 name: Deploy dashboard
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:

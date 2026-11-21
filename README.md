@@ -6,6 +6,8 @@ raises graded alerts, and tells the operator **what is wrong, where, how soon it
 
 Built for the University of Alberta Engineering Competition 2026, Programming category.
 
+**Live demo: https://mnkjoshi.github.io/UAEC2026/** (no install needed; try `?scenario=thermal_propagation`)
+
 ![Thermal propagation scenario](docs/figures/dashboard.png)
 
 ## Quick start
