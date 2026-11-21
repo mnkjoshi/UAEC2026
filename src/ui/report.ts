@@ -5,6 +5,7 @@
  * Charts are drawn as inline SVG so the report has no dependencies and prints crisply.
  */
 import { SEVERITY_RANK, describeModules, type DetectionConfig, type ParsedDataset, type Severity, type Timeline } from '../core';
+import type { BusLocation } from './fleetGeo';
 import { SEVERITY_META, fmt, fmtTime } from './format';
 
 const SEV_COLOR: Record<Severity, string> = {
@@ -83,6 +84,7 @@ export function buildIncidentReport(
   cursor: number,
   config: DetectionConfig,
   sourceName: string,
+  location?: BusLocation | null,
 ): string {
   const state = timeline.states[cursor];
   const start = timeline.states[0].timestamp;
@@ -145,6 +147,17 @@ export function buildIncidentReport(
 <p class="meta">${esc(sourceName)} · telemetry ${fmtTime(start)} to ${fmtTime(state.timestamp)} · ${dataset.modules.length} modules · generated ${new Date().toLocaleString()}</p>
 
 <div class="status">${badge(worst)}<div>${summary}</div></div>
+
+${
+  location
+    ? `<h2>Location (simulated)</h2>
+<p>${esc(location.ctx.name)} on ${esc(location.ctx.routeLabel)}. ${
+        location.stoppedAt ? `Pulled over at ${fmtTime(location.stoppedAt)} when the first critical alert was raised.` : 'In service at the end of the period.'
+      }</p>
+<p><b>${esc(location.guidance.headline)}</b> ${esc(location.guidance.detail)}</p>
+<p class="muted">Bus position is simulated (the telemetry has no GPS). Garages are the real ETS facilities; distances are straight-line.</p>`
+    : ''
+}
 
 <h2>Alerts</h2>
 ${alerts.length ? `<table><tr><th>ID</th><th>Peak</th><th>Alert</th><th>Modules</th><th>Detected</th><th>Cleared</th></tr>

@@ -1,9 +1,10 @@
 /**
- * Simulated geography for the fleet map.
+ * Geography for the maps and driver guidance.
  *
- * The telemetry CSVs contain no GPS, so bus positions are SIMULATED: each bus drives an
- * out-and-back loop between two Edmonton neighbourhoods, advancing with the telemetry clock.
- * Depot locations are ILLUSTRATIVE, not the real transit garages. Distances are straight-line.
+ * Depots are the four real Edmonton Transit Service bus garages, located from their street
+ * addresses with OpenStreetMap's geocoder. Bus positions are SIMULATED, because the telemetry
+ * CSVs contain no GPS: each bus drives an out-and-back loop between two Edmonton neighbourhoods,
+ * advancing with the telemetry clock. Distances are straight-line.
  * Everything here is a pure function so it can be tested and reasoned about.
  */
 import type { PackState, Severity, Timeline } from '../core';
@@ -22,13 +23,12 @@ const PLACES = {
   millWoods: [53.4555, -113.4295],
 } satisfies Record<string, LatLng>;
 
-/** Illustrative depots spread around the city (not real garage locations). */
-export const DEPOTS: Array<{ id: string; name: string; at: LatLng }> = [
-  { id: 'north', name: 'North depot', at: [53.5985, -113.4655] },
-  { id: 'east', name: 'East depot', at: [53.5655, -113.4185] },
-  { id: 'south', name: 'South depot', at: [53.4765, -113.4845] },
-  { id: 'west', name: 'West depot', at: [53.5345, -113.6005] },
-  { id: 'central', name: 'Central depot', at: [53.5505, -113.5115] },
+/** ETS bus garages (City of Edmonton fleet facilities, 2020 onwards). */
+export const DEPOTS: Array<{ id: string; name: string; address: string; at: LatLng }> = [
+  { id: 'mitchell', name: 'Mitchell Garage', address: '11904 154 Street NW', at: [53.5720, -113.5872] },
+  { id: 'kathleen-andrews', name: 'Kathleen Andrews Garage', address: '12403 Fort Road NW', at: [53.5807, -113.4489] },
+  { id: 'ferrier', name: 'Ferrier Garage', address: '8620 58 Avenue NW', at: [53.4940, -113.4561] },
+  { id: 'centennial', name: 'Centennial Garage', address: '15520 Ellerslie Road SW', at: [53.4269, -113.5861] },
 ];
 
 /** Grid-style path between two points: along the avenue first, then the street. */
@@ -36,16 +36,16 @@ function gridPath(a: LatLng, b: LatLng): LatLng[] {
   return [a, [a[0], b[1]], b];
 }
 
-/** One route per bus, keyed by the route label used in the demo fleet (falls back by index). */
-const ROUTES: Array<{ match: string; from: LatLng; to: LatLng }> = [
-  { match: 'Downtown', from: PLACES.downtown, to: PLACES.westmount },
-  { match: 'University', from: PLACES.university, to: PLACES.downtown },
-  { match: 'Abbottsfield', from: PLACES.downtown, to: PLACES.abbottsfield },
-  { match: 'West Edmonton', from: PLACES.downtown, to: PLACES.westEdmonton },
-  { match: 'Jasper Place', from: PLACES.university, to: PLACES.jasperPlace },
-  { match: 'Clareview', from: PLACES.downtown, to: PLACES.clareview },
-  { match: 'Westmount', from: PLACES.westmount, to: PLACES.university },
-  { match: 'Mill Woods', from: PLACES.university, to: PLACES.millWoods },
+/** Simulated routes (labels match the demo fleet; anything else is assigned one by index). */
+export const ROUTES: Array<{ label: string; match: string; from: LatLng; to: LatLng }> = [
+  { label: 'Route 9 · Downtown', match: 'Downtown', from: PLACES.downtown, to: PLACES.westmount },
+  { label: 'Route 4 · University', match: 'University', from: PLACES.university, to: PLACES.downtown },
+  { label: 'Route 8 · Abbottsfield', match: 'Abbottsfield', from: PLACES.downtown, to: PLACES.abbottsfield },
+  { label: 'Route 1 · West Edmonton', match: 'West Edmonton', from: PLACES.downtown, to: PLACES.westEdmonton },
+  { label: 'Route 7 · Jasper Place', match: 'Jasper Place', from: PLACES.university, to: PLACES.jasperPlace },
+  { label: 'Route 2 · Clareview', match: 'Clareview', from: PLACES.downtown, to: PLACES.clareview },
+  { label: 'Route 5 · Westmount', match: 'Westmount', from: PLACES.westmount, to: PLACES.university },
+  { label: 'Route 3 · Mill Woods', match: 'Mill Woods', from: PLACES.university, to: PLACES.millWoods },
 ];
 
 export interface Route {
@@ -54,7 +54,7 @@ export interface Route {
 }
 
 export function routeFor(label: string, index: number): Route {
-  const r = ROUTES.find((x) => label.includes(x.match)) ?? ROUTES[index % ROUTES.length];
+  const r = ROUTES.find((x) => label.includes(x.match)) ?? ROUTES[Math.abs(index) % ROUTES.length];
   const out = gridPath(r.from, r.to);
   const path = [...out, ...out.slice(0, -1).reverse()];
   return { path, lengthKm: pathLength(path) };
@@ -163,3 +163,26 @@ export function locateBus(route: Route, index: number, timeline: Timeline, frame
   const { at, stoppedAt } = busPosition(route, index, timeline, frame);
   return { at, stoppedAt, state, guidance: guidanceFor(state, at, stoppedAt !== null) };
 }
+
+/** Which bus a dataset represents: set by the fleet view, otherwise derived from the file name. */
+export interface BusContext {
+  name: string;
+  routeLabel: string;
+  index: number;
+}
+
+/** A stable simulated route for any single dataset, so the same file always drives the same route. */
+export function contextForDataset(sourceName: string): BusContext {
+  let h = 0;
+  for (const c of sourceName) h = (h * 31 + c.charCodeAt(0)) | 0;
+  const index = Math.abs(h) % ROUTES.length;
+  return { name: 'Simulated bus', routeLabel: ROUTES[index].label, index };
+}
+
+/** Everything the dashboard shows about where the bus is and what the driver should do. */
+export function locationFor(timeline: Timeline, frame: number, ctx: BusContext) {
+  const route = routeFor(ctx.routeLabel, ctx.index);
+  return { ctx, route, ...locateBus(route, ctx.index, timeline, frame) };
+}
+
+export type BusLocation = ReturnType<typeof locationFor>;

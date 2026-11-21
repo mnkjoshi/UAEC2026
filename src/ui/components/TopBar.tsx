@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useFleet } from '../fleetStore';
+import { contextForDataset, locationFor } from '../fleetGeo';
 import { openIncidentReport } from '../report';
 import { useDashboard } from '../store';
 import { Icon } from './Icon';
@@ -29,7 +30,9 @@ export function TopBar() {
 
   const report = () => {
     const s = useDashboard.getState();
-    if (s.dataset && s.timeline) openIncidentReport(s.dataset, s.timeline, s.cursor, s.config, s.sourceName ?? 'Dataset');
+    if (!s.dataset || !s.timeline) return;
+    const location = locationFor(s.timeline, s.cursor, s.busContext ?? contextForDataset(s.sourceName ?? ''));
+    openIncidentReport(s.dataset, s.timeline, s.cursor, s.config, s.sourceName ?? 'Dataset', location);
   };
 
   return (

@@ -17,6 +17,7 @@ import {
   type Severity,
   type Timeline,
 } from '../core';
+import type { BusContext } from './fleetGeo';
 
 export interface ScenarioEntry {
   id: string;
@@ -33,6 +34,8 @@ interface DashboardState {
   scenarios: ScenarioEntry[];
   sourceName: string | null;
   sourceText: string | null;
+  /** Which bus this pack belongs to (set when opened from the fleet view). */
+  busContext: BusContext | null;
   dataset: ParsedDataset | null;
   timeline: Timeline | null;
   error: string | null;
@@ -88,6 +91,7 @@ export const useDashboard = create<DashboardState>((set, get) => {
         cursor: keepCursor ? Math.min(get().cursor, last) : 0,
         playing: keepCursor ? get().playing : timeline.states.length > 1,
         acknowledged: keepCursor ? get().acknowledged : {},
+        busContext: keepCursor ? get().busContext : null,
         selectedModule: keepCursor ? get().selectedModule : null,
       });
     } catch (e) {
@@ -99,6 +103,7 @@ export const useDashboard = create<DashboardState>((set, get) => {
     scenarios: [],
     sourceName: null,
     sourceText: null,
+    busContext: null,
     dataset: null,
     timeline: null,
     error: null,
@@ -136,7 +141,7 @@ export const useDashboard = create<DashboardState>((set, get) => {
 
     loadCsvText: (text, name) => analyse(text, name),
     unload: () =>
-      set({ dataset: null, timeline: null, sourceName: null, sourceText: null, playing: false, cursor: 0, selectedModule: null, error: null }),
+      set({ dataset: null, timeline: null, sourceName: null, sourceText: null, busContext: null, playing: false, cursor: 0, selectedModule: null, error: null }),
 
     setCursor: (i) => {
       const n = get().timeline?.states.length ?? 0;

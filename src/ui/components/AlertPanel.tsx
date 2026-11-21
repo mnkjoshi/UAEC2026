@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { describeModules, type Alert } from '../../core';
 import { fmtDuration, fmtTime } from '../format';
+import { useBusLocation } from '../hooks';
 import { spring } from '../motion';
 import { isAcknowledged, useDashboard } from '../store';
 import { Icon } from './Icon';
@@ -15,6 +16,7 @@ export function AlertPanel({ alerts, now, modules }: { alerts: Alert[]; now: Dat
   const acknowledge = useDashboard((s) => s.acknowledge);
   const acknowledgeAll = useDashboard((s) => s.acknowledgeAll);
   const selectModule = useDashboard((s) => s.selectModule);
+  const location = useBusLocation();
   const unacked = alerts.filter((a) => !isAcknowledged(acknowledged, a.id, a.severity)).length;
 
   return (
@@ -80,6 +82,14 @@ export function AlertPanel({ alerts, now, modules }: { alerts: Alert[]; now: Dat
                 <p className="alert-action">
                   <strong>Action:</strong> {a.action}
                 </p>
+                {location?.guidance.depot && (a.severity === 'critical' || a.severity === 'warning') && (
+                  <p className="alert-depot">
+                    <Icon name="fleet" size={14} />
+                    <span>
+                      <strong>{location.guidance.headline}</strong> {location.guidance.detail}
+                    </span>
+                  </p>
+                )}
                 <div className="alert-foot">
                   <span className="muted">
                     {a.id} · since {fmtTime(a.firstSeen)}
