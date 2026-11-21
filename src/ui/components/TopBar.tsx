@@ -41,7 +41,7 @@ export function TopBar() {
       <div className="topbar-controls">
         {fleetActive ? (
           <>
-            <button type="button" className="btn" onClick={() => useFleet.getState().backToFleet()}>
+            <button type="button" className="btn ghost" onClick={() => useFleet.getState().backToFleet()}>
               <Icon name="arrowLeft" size={14} /> Fleet
             </button>
             <span className="viewing">{sourceName}</span>
@@ -49,7 +49,7 @@ export function TopBar() {
         ) : (
           <>
             <label className="source">
-              <span className="muted">Data source</span>
+              <span className="sr-only">Data source</span>
               <select
                 value={current?.id ?? ''}
                 onChange={(e) => {
@@ -73,7 +73,7 @@ export function TopBar() {
               </select>
             </label>
             <button type="button" className="btn primary" onClick={() => fileInput.current?.click()} disabled={loading}>
-              <Icon name="upload" size={14} /> Upload CSV
+              <Icon name="upload" size={15} /> Upload CSV
             </button>
             <input
               ref={fileInput}
@@ -89,29 +89,32 @@ export function TopBar() {
           </>
         )}
 
-        <button type="button" className="btn" onClick={report} title="Printable report of everything up to the current moment">
-          <Icon name="report" size={15} /> Report
+        <span className="topbar-divider" aria-hidden />
+        <button type="button" className="btn ghost" onClick={report} title="Printable report of everything up to the current moment">
+          <Icon name="report" size={16} /> Report
+        </button>
+        <button type="button" className="btn ghost" onClick={() => setSettingsOpen(true)} title="Detection thresholds">
+          <Icon name="sliders" size={16} /> Thresholds
         </button>
         <button
           type="button"
-          className={`btn${soundOn ? ' active' : ''}`}
+          className={`btn ghost icon-only${soundOn ? ' on' : ''}`}
           onClick={toggleSound}
           aria-pressed={soundOn}
-          title="Audible alarm for new critical alerts"
+          aria-label="Audible alarm for new critical alerts"
+          title={soundOn ? 'Alarm sound on' : 'Alarm sound off'}
         >
-          <Icon name={soundOn ? 'bell' : 'bellOff'} size={15} /> {soundOn ? 'Alarm on' : 'Alarm off'}
+          <Icon name={soundOn ? 'bell' : 'bellOff'} size={17} />
         </button>
         <button
           type="button"
-          className={`btn${desktopAlerts ? ' active' : ''}`}
+          className={`btn ghost icon-only${desktopAlerts ? ' on' : ''}`}
           onClick={toggleDesktopAlerts}
           aria-pressed={desktopAlerts}
-          title="Desktop notifications for new critical alerts"
+          aria-label="Desktop notifications for new critical alerts"
+          title={desktopAlerts ? 'Desktop notifications on' : 'Desktop notifications off'}
         >
-          <Icon name="monitor" size={15} /> {desktopAlerts ? 'Notifications on' : 'Notifications off'}
-        </button>
-        <button type="button" className="btn" onClick={() => setSettingsOpen(true)}>
-          <Icon name="sliders" size={15} /> Thresholds
+          <Icon name="monitor" size={17} />
         </button>
       </div>
     </header>

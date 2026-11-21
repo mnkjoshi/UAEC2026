@@ -10,6 +10,7 @@ import { Icon } from './Icon';
 import { Logo } from './Logo';
 import { AnimatedNumber } from './AnimatedNumber';
 import { StatusBadge } from './StatusBadge';
+import { Transport } from './Transport';
 
 
 /**
@@ -26,6 +27,7 @@ export function FleetView() {
   const fileInput = useRef<HTMLInputElement>(null);
   const last = fleetLength(buses) - 1;
   const intervalSec = buses[0]?.dataset.quality.intervalSec || 10;
+  const longest = buses.reduce<Bus | undefined>((a, b) => (!a || b.timeline.states.length > a.timeline.states.length ? b : a), undefined);
 
   // Synchronised playback across all buses.
   useEffect(() => {
@@ -103,28 +105,26 @@ export function FleetView() {
           </div>
         </section>
 
-        <section className="playback" aria-label="Fleet playback">
-          <div className="pb-buttons">
-            <button type="button" className="btn icon" onClick={() => setCursor(0)} aria-label="Restart">
-              <Icon name="restart" />
-            </button>
-            <button type="button" className="btn icon primary" onClick={() => setPlaying(!playing)} aria-label={playing ? 'Pause' : 'Play'}>
-              <Icon name={playing ? 'pause' : 'play'} />
-            </button>
-            <button type="button" className="btn icon" onClick={() => { setCursor(last); setPlaying(false); }} aria-label="Jump to end">
-              <Icon name="end" />
-            </button>
-          </div>
-          <div className="pb-track">
-            <input type="range" min={0} max={last} value={cursor} onChange={(e) => { setCursor(Number(e.target.value)); setPlaying(false); }} aria-label="Fleet timeline" />
-          </div>
-          <div className="pb-info">
-            <span className="pb-time">{fmtTime(now)}</span>
-            <span className="muted">
-              {cursor + 1}/{last + 1}
-            </span>
-          </div>
-        </section>
+        <Transport
+          playing={playing}
+          position={cursor}
+          last={last}
+          currentLabel={fmtTime(now)}
+          startLabel={fmtTime(longest?.timeline.states[0]?.timestamp)}
+          endLabel={fmtTime(longest?.timeline.states[last]?.timestamp)}
+          markers={buses.flatMap((b) =>
+            b.timeline.events
+              .filter((e) => e.kind === 'raised' && (e.severity === 'critical' || e.severity === 'warning'))
+              .map((e) => ({ key: `${b.id}-${e.id}`, position: e.frameIndex, color: SEVERITY_META[e.severity].color, title: `${b.name}: ${e.message}` })),
+          )}
+          speed={speed}
+          onSpeed={useDashboard.getState().setSpeed}
+          onToggle={() => setPlaying(!playing)}
+          onSeek={(i) => {
+            setCursor(i);
+            setPlaying(false);
+          }}
+        />
 
         <div className="fleet-grid">
           {rows.map(({ bus, state }) => (
