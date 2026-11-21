@@ -2,6 +2,8 @@ import { useRef } from 'react';
 import { useFleet } from '../fleetStore';
 import { openIncidentReport } from '../report';
 import { useDashboard } from '../store';
+import { Icon } from './Icon';
+import { Logo } from './Logo';
 
 /**
  * Brand, data source (built-in scenario or uploaded CSV, or the bus being viewed in fleet mode),
@@ -33,20 +35,14 @@ export function TopBar() {
   return (
     <header className="topbar">
       <button type="button" className="brand" onClick={goHome} title="Back to start">
-        <span className="brand-mark" aria-hidden>
-          ⚡
-        </span>
-        <div>
-          <div className="brand-name">Battery Safety Monitor</div>
-          <div className="brand-sub">E-bus fleet · 12-module pack BMS</div>
-        </div>
+        <Logo subtitle="Battery safety monitoring" />
       </button>
 
       <div className="topbar-controls">
         {fleetActive ? (
           <>
             <button type="button" className="btn" onClick={() => useFleet.getState().backToFleet()}>
-              ← Fleet
+              <Icon name="arrowLeft" size={14} /> Fleet
             </button>
             <span className="viewing">{sourceName}</span>
           </>
@@ -77,7 +73,7 @@ export function TopBar() {
               </select>
             </label>
             <button type="button" className="btn primary" onClick={() => fileInput.current?.click()} disabled={loading}>
-              ⬆ Upload CSV
+              <Icon name="upload" size={14} /> Upload CSV
             </button>
             <input
               ref={fileInput}
@@ -94,7 +90,7 @@ export function TopBar() {
         )}
 
         <button type="button" className="btn" onClick={report} title="Printable report of everything up to the current moment">
-          📄 Incident report
+          <Icon name="report" size={15} /> Report
         </button>
         <button
           type="button"
@@ -103,7 +99,7 @@ export function TopBar() {
           aria-pressed={soundOn}
           title="Audible alarm for new critical alerts"
         >
-          {soundOn ? '🔔 Alarm on' : '🔕 Alarm off'}
+          <Icon name={soundOn ? 'bell' : 'bellOff'} size={15} /> {soundOn ? 'Alarm on' : 'Alarm off'}
         </button>
         <button
           type="button"
@@ -112,10 +108,10 @@ export function TopBar() {
           aria-pressed={desktopAlerts}
           title="Desktop notifications for new critical alerts"
         >
-          {desktopAlerts ? '🖥 Desktop alerts on' : '🖥 Desktop alerts off'}
+          <Icon name="monitor" size={15} /> {desktopAlerts ? 'Notifications on' : 'Notifications off'}
         </button>
         <button type="button" className="btn" onClick={() => setSettingsOpen(true)}>
-          ⚙ Thresholds
+          <Icon name="sliders" size={15} /> Thresholds
         </button>
       </div>
     </header>

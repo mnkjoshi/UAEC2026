@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Timeline } from '../../core';
 import { fmtTime } from '../format';
+import { Icon } from './Icon';
 import { StatusBadge } from './StatusBadge';
 
 const KIND_LABEL: Record<string, string> = {
@@ -54,7 +55,7 @@ export function EventLog({ timeline, cursor, sourceName }: { timeline: Timeline;
             <input type="checkbox" checked={showMinor} onChange={(e) => setShowMinor(e.target.checked)} /> Show ignored blips
           </label>
           <button type="button" className="btn small" onClick={exportCsv} disabled={!events.length}>
-            ⬇ Export CSV
+            <Icon name="download" size={14} /> Export CSV
           </button>
         </div>
       </header>

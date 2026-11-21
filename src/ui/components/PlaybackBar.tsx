@@ -1,6 +1,7 @@
 import type { Timeline } from '../../core';
 import { SEVERITY_META, fmtTime } from '../format';
 import { SPEEDS, useDashboard } from '../store';
+import { Icon } from './Icon';
 
 /**
  * Replays the file as a live feed. The scrubber shows where alerts were raised,
@@ -18,10 +19,10 @@ export function PlaybackBar({ timeline }: { timeline: Timeline }) {
     <section className="playback" aria-label="Playback controls">
       <div className="pb-buttons">
         <button type="button" className="btn icon" onClick={() => setCursor(0)} title="Restart" aria-label="Restart">
-          ⏮
+          <Icon name="restart" />
         </button>
         <button type="button" className="btn icon" onClick={() => step(-1)} title="Step back" aria-label="Step back">
-          ◀
+          <Icon name="stepBack" />
         </button>
         <button
           type="button"
@@ -30,13 +31,13 @@ export function PlaybackBar({ timeline }: { timeline: Timeline }) {
           title={playing ? 'Pause (Space)' : 'Play (Space)'}
           aria-label={playing ? 'Pause' : 'Play'}
         >
-          {playing ? '❚❚' : '▶'}
+          <Icon name={playing ? 'pause' : 'play'} />
         </button>
         <button type="button" className="btn icon" onClick={() => step(1)} title="Step forward" aria-label="Step forward">
-          ▶|
+          <Icon name="stepForward" />
         </button>
         <button type="button" className="btn icon" onClick={() => { setCursor(last); setPlaying(false); }} title="Jump to end" aria-label="Jump to end">
-          ⏭
+          <Icon name="end" />
         </button>
       </div>
 

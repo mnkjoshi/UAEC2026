@@ -1,6 +1,7 @@
 import type { PackState } from '../../core';
-import { SEVERITY_META, fmtTime } from '../format';
+import { SEVERITY_ICON, SEVERITY_META, fmtTime } from '../format';
 import { isAcknowledged, useDashboard } from '../store';
+import { Icon } from './Icon';
 
 /** Full-width pack status: the single most important thing on screen. */
 export function StatusBanner({ state }: { state: PackState }) {
@@ -23,18 +24,18 @@ export function StatusBanner({ state }: { state: PackState }) {
       aria-live="assertive"
     >
       <div className="banner-icon" aria-hidden>
-        {meta.icon}
+        <Icon name={SEVERITY_ICON[state.severity]} size={26} />
       </div>
       <div className="banner-text">
-        <div className="banner-level">PACK {meta.banner.toUpperCase()}</div>
+        <div className="banner-level">{meta.banner}</div>
         <div className="banner-detail">
           {top ? `${top.title}: ${top.moduleIds.length > 4 ? `${top.moduleIds.length} modules` : top.moduleIds.join(', ')}` : 'Every module is within limits and reporting.'}
         </div>
       </div>
       <div className="banner-counts">
-        <span title="Critical alerts">✕ {counts.critical}</span>
-        <span title="Warnings">! {counts.warning}</span>
-        <span title="Data faults">? {counts.data}</span>
+        <span title="Critical alerts">{counts.critical} critical</span>
+        <span title="Warnings">{counts.warning} warning</span>
+        <span title="Data faults">{counts.data} data</span>
       </div>
       <div className="banner-time">
         <span className="muted">Telemetry time</span>

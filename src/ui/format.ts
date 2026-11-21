@@ -1,5 +1,6 @@
 /** Display formatting. Missing values always render as an em dash, never 0 or NaN. */
 import type { Metric, Severity } from '../core';
+import type { IconName } from './components/Icon';
 
 export const DASH = '—';
 
@@ -35,11 +36,20 @@ export const METRIC_META: Record<Metric, { label: string; unit: string; digits: 
   soh: { label: 'State of health', unit: '%', digits: 1 },
 };
 
-/** Severity presentation: colour token, icon and words. Colour is never the only cue. */
-export const SEVERITY_META: Record<Severity, { label: string; icon: string; color: string; banner: string }> = {
-  normal: { label: 'Normal', icon: '✓', color: 'var(--sev-normal)', banner: 'All systems normal' },
-  advisory: { label: 'Advisory', icon: 'i', color: 'var(--sev-advisory)', banner: 'Advisory' },
-  data_fault: { label: 'No data', icon: '?', color: 'var(--sev-data-fault)', banner: 'Sensor / data fault' },
-  warning: { label: 'Warning', icon: '!', color: 'var(--sev-warning)', banner: 'Warning' },
-  critical: { label: 'Critical', icon: '✕', color: 'var(--sev-critical)', banner: 'Critical' },
+/** Severity presentation: colour token and words (icons live in StatusBadge). Colour is never the only cue. */
+export const SEVERITY_META: Record<Severity, { label: string; color: string; banner: string }> = {
+  normal: { label: 'Normal', color: 'var(--sev-normal)', banner: 'Pack normal' },
+  advisory: { label: 'Advisory', color: 'var(--sev-advisory)', banner: 'Pack normal, advisory logged' },
+  data_fault: { label: 'No data', color: 'var(--sev-data-fault)', banner: 'Sensor or data fault' },
+  warning: { label: 'Warning', color: 'var(--sev-warning)', banner: 'Pack warning' },
+  critical: { label: 'Critical', color: 'var(--sev-critical)', banner: 'Pack critical' },
+};
+
+/** Icon shape per severity: shape as well as colour, so it reads without colour vision. */
+export const SEVERITY_ICON: Record<Severity, IconName> = {
+  normal: 'check',
+  advisory: 'info',
+  data_fault: 'question',
+  warning: 'alert',
+  critical: 'cross',
 };

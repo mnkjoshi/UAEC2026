@@ -7,10 +7,10 @@
 
 .fleet-summary {
   display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap;
-  padding: 16px 20px; border-radius: var(--radius); border: 1px solid var(--sev);
-  background: linear-gradient(90deg, color-mix(in srgb, var(--sev) 22%, var(--surface)), var(--surface) 70%);
+  padding: 16px 20px; border-radius: var(--radius); border: 1px solid var(--sev); border-left-width: 6px;
+  background: color-mix(in srgb, var(--sev) 12%, var(--surface));
 }
-.fleet-headline { font-size: 1.35rem; font-weight: 800; font-variation-settings: 'wdth' 112; color: var(--sev); margin-bottom: 10px; }
+.fleet-headline { font-size: 1.3rem; font-weight: 700; color: var(--sev); margin-bottom: 10px; }
 .fleet-bar { display: flex; gap: 3px; min-width: min(560px, 80vw); border-radius: 6px; overflow: hidden; }
 .fleet-bar .seg {
   padding: 4px 10px; font-size: 0.8rem; font-weight: 650; white-space: nowrap;
@@ -33,7 +33,7 @@
 .bus-card.sev-data_fault { border-color: color-mix(in srgb, var(--sev-data-fault) 60%, var(--border)); }
 .bus-card.sev-normal { border-top-color: color-mix(in srgb, var(--sev-normal) 70%, transparent); }
 .bus-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-.bus-name { font-weight: 800; font-size: 1.1rem; font-variation-settings: 'wdth' 110; }
+.bus-name { font-weight: 700; font-size: 1.08rem; }
 
 .bus-pack { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
 .bus-cell { height: 16px; border-radius: 3px; opacity: 0.85; transition: background 300ms; }
@@ -49,7 +49,7 @@
   border: 2px solid var(--sev-critical);
   animation: l-rise 300ms ease-out both;
 }
-.esc-icon { font-size: 1.4rem; color: var(--sev-critical); }
+.esc-icon { display: inline-flex; color: var(--sev-critical); }
 .esc-text { flex: 1; }
 
 @media (max-width: 700px) {

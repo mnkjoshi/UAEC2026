@@ -3,6 +3,8 @@ import { SEVERITY_RANK, type Severity } from '../../core';
 import { SEVERITY_META, fmt, fmtTime } from '../format';
 import { busState, fleetLength, useFleet, type Bus } from '../fleetStore';
 import { useDashboard } from '../store';
+import { Icon } from './Icon';
+import { Logo } from './Logo';
 import { StatusBadge } from './StatusBadge';
 
 /** Heat colour for the mini pack strip (same scale as the landing page). */
@@ -55,17 +57,11 @@ export function FleetView() {
     <div className="fleet">
       <header className="topbar">
         <button type="button" className="brand" onClick={exitFleet} title="Back to start">
-          <span className="brand-mark" aria-hidden>
-            ⚡
-          </span>
-          <div>
-            <div className="brand-name">Battery Safety Monitor</div>
-            <div className="brand-sub">Fleet overview · {buses.length} buses</div>
-          </div>
+          <Logo subtitle={`Fleet overview, ${buses.length} buses`} />
         </button>
         <div className="topbar-controls">
           <button type="button" className="btn" onClick={() => fileInput.current?.click()}>
-            ⬆ Load bus CSVs
+            <Icon name="upload" size={14} /> Load bus CSVs
           </button>
           <input
             ref={fileInput}
@@ -114,13 +110,13 @@ export function FleetView() {
         <section className="playback" aria-label="Fleet playback">
           <div className="pb-buttons">
             <button type="button" className="btn icon" onClick={() => setCursor(0)} aria-label="Restart">
-              ⏮
+              <Icon name="restart" />
             </button>
             <button type="button" className="btn icon primary" onClick={() => setPlaying(!playing)} aria-label={playing ? 'Pause' : 'Play'}>
-              {playing ? '❚❚' : '▶'}
+              <Icon name={playing ? 'pause' : 'play'} />
             </button>
             <button type="button" className="btn icon" onClick={() => { setCursor(last); setPlaying(false); }} aria-label="Jump to end">
-              ⏭
+              <Icon name="end" />
             </button>
           </div>
           <div className="pb-track">
