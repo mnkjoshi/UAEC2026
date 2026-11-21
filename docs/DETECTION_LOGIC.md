@@ -1,139 +1,165 @@
 # Detection Logic & Threshold Justification
 
-This document is the reference for every threshold the dashboard uses and why.
-All values live in a single config file (`src/core/config.ts`) and can be changed in the app's settings panel.
-Nothing is tied to the specific provided datasets: module IDs, module count and sample interval are all read from the data.
+The reference for every threshold and rule the dashboard uses, and why.
+All values live in [`src/core/config.ts`](../src/core/config.ts) and can be changed live in the app's **Thresholds** panel.
+Nothing is tied to the provided datasets: module IDs, module count, sample interval and voltage level are all read from the data.
 
 ## Design principles
 
-1. **Causal.** Every decision uses only the current and past samples. Replaying a CSV behaves exactly like a live feed.
-2. **Data problems are not battery problems.** A dead sensor is reported as a *data* fault with its own colour, never as overheating or under-voltage.
-3. **Unknown is not safe.** A module whose sensors have dropped out is shown as "unverified", not as healthy.
-4. **Earliest reliable warning.** Relative and rate-based rules catch faults early; absolute limits are the safety backstop.
-5. **No false alarms.** Every alert must persist before it is raised, and must recover with margin before it clears. The normal dataset must produce zero alerts.
+1. **Causal.** Every decision uses only current and past samples. Replaying a CSV behaves exactly like a live feed.
+2. **Data problems are not battery problems.** A dead sensor is reported as a *data fault* (purple, hatched), never as overheating or under-voltage.
+3. **Unknown is not safe.** A module whose sensor drops out is shown as "no data", and any hazard it already had stays active until good data proves otherwise.
+4. **Earliest reliable warning.** Relative and rate-based rules catch faults minutes early; absolute limits are the safety backstop.
+5. **No false alarms.** Conditions must persist before alerting and recover with margin before clearing. The normal dataset produces zero alerts (enforced by tests).
 
 ## Pipeline
 
 ```
-CSV ─▶ Ingest & validate ─▶ Sensor-integrity checks ─▶ Hazard detectors ─▶ Diagnosis ─▶ Alert manager ─▶ UI
-           │                        │                     (absolute,            (rules →        (persistence,
-           ▼                        ▼                      pack-relative,        finding +       hysteresis,
-     Data-quality report     Per-reading quality flag      rate-of-change)       action)         lifecycle)
+CSV ─▶ Parser ─▶ Sensor integrity ─▶ Hazard detectors ─▶ Condition tracker ─▶ Diagnosis ─▶ Alert manager ─▶ UI
+         │              │             (absolute,           (persistence,         (rules →      (identity,
+         ▼              ▼              pack-relative,        hysteresis,           root cause,   escalation,
+   Data-quality    Untrusted values    rate of change)      freeze on dropout)    action,       merge, clear)
+     report        withheld                                                       forecast)
 ```
 
-## 1. Ingestion & validation
+## 1. Ingestion & validation (`parser.ts`)
 
 | Problem | Handling |
 |---|---|
-| Header variations | Trim, lowercase, strip units/punctuation, match against known aliases |
-| Blank / `NaN` / `null` / non-numeric | Reading stored as missing with a reason code; row kept |
-| Unparseable timestamp | Row quarantined and counted in the data-quality report |
-| Duplicate (timestamp, module) | Keep the first, count the duplicate |
-| Out-of-order rows | Sorted by timestamp before replay |
-| Irregular spacing / gaps | Rates use the actual Δt between samples; gaps > 3× the median interval are flagged |
-| Module missing at a timestamp | Module marked "no data" for that tick |
-| Unknown / extra module IDs, count ≠ 12 | Accepted and displayed; a data-quality warning is shown |
-| Empty or header-only file | Clear error message; app does not crash |
+| Header variations | Lower-cased, units and punctuation stripped, matched to known names (`temp*`, `volt*`, `*module*`, `stateofcharge`/`soc`, …); column order irrelevant |
+| Blank / `NaN` / `null` / `N/A` / `-` | Value = missing (reason recorded); row kept |
+| Non-numeric text (`ERR`, `abc`) | Value = corrupted (reason recorded); row kept |
+| Unreadable timestamp or blank module ID | Row skipped and counted |
+| Duplicate (timestamp, module) | First kept, duplicates counted |
+| Out-of-order rows | Sorted by time |
+| Irregular spacing / gaps | Rates use real timestamps; gaps > 3× median interval are logged |
+| Module absent at a timestamp | Treated as "no data received" for that module |
+| Unknown / extra modules, count ≠ 12 | Accepted, displayed, noted in the data-quality report |
+| Status column (`OK`, `ok`, `Normal`…) | Case-insensitive; anything not OK-like is a status flag |
+| Empty, header-only or unrecognisable file | Clear error message; the previous dataset stays on screen |
 
-## 2. Sensor-integrity checks (data faults)
+## 2. Sensor integrity (`detectors/sensorIntegrity.ts`)
 
-| Check | Rule | Why |
+| Check | Rule | Justification |
 |---|---|---|
-| Missing value | Value blank/invalid, or `Sensor Status` ≠ `OK` | Direct evidence of a dropout |
-| Stuck sensor | Temperature identical for ≥ 6 consecutive samples, or voltage identical for ≥ 9 | Normal data never repeats temperature more than 2 samples or voltage more than 4 (1 mV resolution). Thresholds are ~2–3× that. |
-| Out of physical range | T < -40 °C or > 150 °C; V < 0 or > 5 V; SOC/SOH outside 0–100 %; \|I\| > 1000 A | Values outside these ranges cannot come from a working Li-ion sensor |
-| Impossible jump | ΔT > 10 °C or ΔV > 0.5 V in one sample, **and** it returns within 2 samples | Real thermal events build over many samples (fastest observed: 1.3 °C per 10 s). A spike that snaps back is electrical noise. |
+| Missing | Temperature or voltage blank, or module absent | Direct evidence of a dropout |
+| Out of range | T outside −40…150 °C; cell V outside 0…5 V; SOC/SOH outside 0…100 %; \|I\| > 2000 A | No working Li-ion sensor can report these |
+| Sentinel | −999, −9999, 9999, 99999 | Common logger "no reading" placeholders |
+| Stuck | Same temperature for ≥ 6 samples, or same voltage for ≥ 9 | Normal data never repeats a temperature > 2 samples or a voltage > 4 (1 mV resolution): ~2–3× margin |
+| Implausible jump | ΔT > 10 °C or ΔV > 0.5 V per sample (scaled by elapsed samples after a gap) | Fastest real change in any provided fault: 1.4 °C and 22 mV per 10 s |
+| …accepted if it persists | A jump that holds for 3 samples is accepted as a real level change | A genuine step (e.g. connection failure) must not be ignored forever |
+| Status flag | Status not OK while values are present | Sensor self-reports a problem |
 
-A faulted reading is excluded from hazard detection and from the pack median, so one bad sensor cannot distort the rest of the pack.
+Untrusted readings are **withheld from hazard detection and from the pack median**, so one bad sensor cannot distort the rest of the pack.
 
-## 3. Hazard detectors
+## 3. Hazard detectors (`detectors/hazards.ts`)
 
-### 3a. Absolute safety limits (backstop)
+### 3a. Absolute limits (backstop)
 
-Typical Li-ion (NMC) datasheet operating limits. Cite the specific datasheet used in the presentation.
+Voltage is graded **per cell**. If the file reports module-level voltage (e.g. 44 V), cells in series are inferred as `round(median V / 3.7 V)` and all voltage limits scale automatically.
 
-| Metric | Warning | Critical | Rationale |
-|---|---|---|---|
-| Temperature | ≥ 45 °C | ≥ 55 °C | Most Li-ion cells are rated for discharge up to ~55–60 °C. Above this, degradation speeds up sharply and thermal runaway risk rises. |
-| Voltage (low) | ≤ 3.40 V | ≤ 3.20 V | Approaching the discharge cut-off. Deep discharge causes copper dissolution and permanent damage. |
-| Voltage (high) | ≥ 4.15 V | ≥ 4.20 V | NMC charge limit is 4.2 V. Over-charge causes lithium plating and heating. |
-| State of charge | ≤ 20 % | ≤ 10 % | Operator needs time to return to depot |
-| State of health | ≤ 80 % | ≤ 70 % | 80 % is the standard end-of-life point for traction batteries |
-| Current | ≥ 1.5× rolling pack median | ≥ 2× | Relative, since rated current is not given in the data |
+| Metric | Warning | Critical | Hysteresis | Rationale |
+|---|---|---|---|---|
+| Temperature | ≥ 45 °C | ≥ 55 °C | 2 °C | Li-ion discharge limit is typically 55–60 °C; degradation accelerates above ~45 °C |
+| Cell voltage low | ≤ 3.40 V | ≤ 3.20 V | 30 mV | Approaching NMC discharge cut-off (~3.0 V); deep discharge causes permanent damage |
+| Cell voltage high | ≥ 4.15 V | ≥ 4.20 V | 20 mV | NMC charge limit 4.2 V; over-charge causes lithium plating and heating |
+| State of charge | ≤ 20 % | ≤ 10 % | 2 % | Time to return to depot |
+| State of health | ≤ 80 % | ≤ 70 % | 1 % | 80 % is the standard end-of-life point for traction batteries |
 
-### 3b. Pack-relative deviation (early detection)
+### 3b. Deviation from the pack median (early detection)
 
-Each module is compared to the **median of the healthy modules at the same timestamp**. The median is used because one or two faulty modules cannot drag it.
+Each module is compared with the **median of trusted modules at the same timestamp** (needs ≥ 3). The median is used because one or two faulty modules cannot drag it, and it automatically adapts to ambient temperature and load.
 
-| Metric | Warning | Critical | Normal-data maximum | Margin |
+| Metric | Warning | Critical | Normal-data max | Margin |
 |---|---|---|---|---|
 | Temperature above median | > 5 °C | > 10 °C | 2.33 °C | 2.1× |
-| Voltage below/above median | > 30 mV | > 100 mV | 13 mV | 2.3× |
-
-This also adapts to ambient conditions: a hot day raises every module together and causes no relative alert.
+| Cell voltage from median (either side) | > 30 mV | > 100 mV | 13 mV | 2.3× |
+| Current from median | > max(50 % of median, 20 A) | > max(100 % of median, 40 A) | ~3 A | Series modules carry the same current |
 
 ### 3c. Rate of change
 
-Calculated as the slope over the last 30 s (≥ 3 samples) using actual timestamps.
+Least-squares slope over the last **30 s** (or 3 samples, whichever is longer), using real timestamps; needs ≥ 3 points covering ≥ 60 % of the window.
 
-| Metric | Warning | Critical | Normal-data maximum |
-|---|---|---|---|
-| Temperature rise | > 2 °C/min | > 4 °C/min | 0.86 °C/min |
-| Voltage drop | > 0.05 V/min | > 0.10 V/min | 0.016 V/min |
+| Metric | Warning | Critical | Normal-data max | Provided faults |
+|---|---|---|---|---|
+| Temperature rise | > 2 °C/min | > 4 °C/min | 0.86 °C/min | 5–7.5 °C/min |
+| Cell voltage fall | > 0.05 V/min | > 0.10 V/min | 0.016 V/min | 0.11 V/min |
 
-Observed faults: Thermal Rise ≈ 7.5 °C/min, Multiple Heating ≈ 5 °C/min, Low Voltage ≈ 0.11 V/min. All exceed critical.
+### 3d. Forecast
 
-### 3d. Forecast: time to limit
+For a module rising faster than the warning rate, the alert shows when it will reach the critical limit at the current slope
+(e.g. *"M07 reaches 55 °C in ~44 s"*); likewise for falling voltage towards 3.2 V.
 
-A linear fit over the last 30–60 s projects when a rising or falling metric will cross its critical limit,
-e.g. *"M07 reaches 55 °C in ~40 s"*. This is shown only while the slope exceeds the warning rate.
-
-## 4. Diagnosis rules
-
-Signals are combined into a plain-language finding and a recommended operator action.
-
-| Pattern | Diagnosis | Recommended action | Severity |
-|---|---|---|---|
-| One module heating fast, others normal | Isolated thermal event: possible internal short or early thermal runaway | Reduce load, prepare to stop safely, notify maintenance | Critical |
-| Two or more **adjacent** modules heating together | Cooling failure or thermal propagation between modules | Reduce load, check coolant flow and fans, stop if rising | Critical |
-| Whole pack warming together | High load or high ambient temperature | Reduce demand, check HVAC/cooling | Warning |
-| Voltage dropping on one module, current normal | Cell degradation, internal leakage or loose connection | Schedule inspection; stop if it continues | Warning → Critical |
-| Voltage dropping **and** temperature rising on the same module | Internal short circuit | Stop safely and evacuate if critical | Critical |
-| T/V missing but current still reported | Sensor or wiring-harness fault; module still under load and unmonitored | Watch neighbouring modules; schedule sensor repair | Data fault |
-| Value stuck | Frozen sensor | Treat module as unverified; schedule repair | Data fault |
-| Single-sample spike that returns | Sensor glitch / electrical noise | Log only | Info |
-| Many modules losing data at once | Communication / BMS bus fault | Check BMS link; treat pack as unverified | Data fault (pack) |
-
-## 5. Alert lifecycle and false-alarm control
+## 4. False-alarm filter (`conditions.ts`)
 
 | Mechanism | Setting | Purpose |
 |---|---|---|
-| Persistence to raise | Condition true for **2 consecutive samples** (3 for warnings) | Ignores single noisy samples |
-| Hysteresis to clear | Value must recover past **80 % of the threshold margin** for 3 samples | Prevents flickering on/off at the boundary |
-| States | Raised → Active → Acknowledged → Cleared | Operator acknowledges; history is kept and exportable |
-| Escalation | A warning that keeps worsening is upgraded to critical in place | One alert per problem, not a flood |
+| Persistence to raise | Warning: **3** consecutive samples · Critical: **2** · Sensor fault: **2** | A single noisy sample can never alert |
+| Hysteresis | Value must recover past the threshold by the margin in §3a–3c before the condition eases | No flickering at the boundary |
+| Persistence to clear | **3** samples (sensor faults: 2) | Recovery must be sustained |
+| Escalation | Immediate once confirmed | Worsening problems are never delayed |
+| Freeze on dropout | While a value is untrusted, its hazard conditions neither clear nor progress | A heating module that loses its sensor stays alerted |
+| Transients | Unconfirmed sensor blips are logged as "Ignored" events | Visible audit trail without alerting |
+
+## 5. Diagnosis (`diagnosis.ts`)
+
+Conditions are grouped by category, then by location in the pack (module order = physical adjacency).
+
+| Pattern | Alert | Severity | Recommended action |
+|---|---|---|---|
+| One module heating, neighbours normal | Isolated thermal event | Warning / Critical | Reduce load / stop safely and prepare to evacuate |
+| Same module heating **and** voltage falling | Suspected internal short circuit | Critical | Stop, evacuate if rising, isolate pack |
+| ≥ 2 adjacent modules heating, started together | Multi-module heating (Mxx–Myy) | Warning / Critical | Reduce load, check coolant flow to that section |
+| ≥ 2 adjacent modules, one started ≥ 30 s earlier | Thermal propagation from Mxx | Critical | Stop and evacuate; contact emergency services if venting |
+| ≥ 75 % of modules heating, or pack median rising > 2 °C/min | Pack-wide temperature rise | Warning / Critical | Reduce demand, check coolant pump, fans, HVAC |
+| One module's voltage falling | Module voltage drop | Warning / Critical | Inspect; stop if it keeps falling |
+| ≥ 75 % of modules low voltage | Pack voltage low | Warning / Critical | Return to depot / stop to avoid over-discharge |
+| Voltage above limit or above pack | Over-voltage / Module voltage above pack | Warning / Critical | Stop charging, limit regen braking |
+| SOC low (pack-wide or single module) | Low state of charge / Low charge on Mxx | Warning / Critical | Return to depot / schedule balancing |
+| SOH low | Degraded module health | Warning / Critical | Schedule replacement |
+| Module current differs from pack | Abnormal module current | Warning / Critical | Inspect module and current sensor |
+| T/V missing while current still flows | Sensor dropout | Data fault | Treat as unverified, watch neighbours |
+| ≥ 50 % of modules missing at once | Communication loss | Data fault | Pack unmonitored: reduce load, check BMS link |
+| Stuck / implausible / status flag | Stuck sensor / Implausible readings / Sensor fault reported | Data fault | Schedule sensor repair |
+| Any sensor fault next to an overheating module | (same) | **Warning** | The unmonitored module may be affected too |
+
+**Alert identity:** each new problem is matched to an existing alert of the same category with overlapping modules, so an
+alert keeps its ID as it grows (M04 → M04–M06), escalates, eases or is renamed. Alerts that become one are logged as *merged*.
 
 ## 6. Severity & colour model
 
-Pack status is the **worst** module status.
+Pack status = the worst module or alert. Severity order: **Normal < Advisory < Data fault < Warning < Critical**.
+Data fault ranks above advisory (the module's true state is hidden) but below hazards, so a confirmed hazard is never masked by a dropout.
 
 | Level | Colour | Icon | Meaning |
 |---|---|---|---|
-| Normal | Green | ✓ | Within all limits |
+| Normal | Green / grey lines | ✓ | Within all limits |
 | Advisory | Blue | i | Logged event, no action required |
-| Warning | Amber | ⚠ | Developing problem; act soon |
-| Critical | Red (pulsing) | ⛔ | Immediate action required |
-| Data fault | Purple / grey (hatched) | ? | Sensor or data problem; module state unverified |
+| Data fault | Purple, hatched tile | ? | Sensor or data problem; state unverified |
+| Warning | Amber | ! | Developing problem; act soon |
+| Critical | Red, pulsing | ✕ | Immediate action required |
 
-Colour is always paired with an icon and a text label, so the dashboard remains readable for colour-blind operators.
+Colour is always paired with an icon and a word (colour-blind safe), and animation respects `prefers-reduced-motion`.
 
-## 7. Validation targets
+## 7. Validation
 
-| Dataset | Expected result |
+Enforced by `npm test` (50 tests) and cross-checked by the independent Python implementation (`python3 tools/validate.py`).
+
+| Scenario | Expected and observed |
 |---|---|
-| Normal operations | **Zero** alerts |
-| Low Voltage | M03 voltage-deviation warning within ~20 s of onset, escalating to critical |
-| Thermal Rise | M07 isolated thermal event, critical, with time-to-limit forecast |
-| Multiple Module Heating | M04–M06 grouped as one adjacent-cluster cooling/propagation alert |
-| Sensor Failure | M11 data fault for 100 s, then clears; M03/M06 single dropouts logged without hazard alerts |
-| Synthetic edge-case CSVs | No crashes; each defect appears in the data-quality report |
+| Normal operations | Zero alerts at every timestamp |
+| Low voltage | M03 *Module voltage drop*, critical at 12:02:50 (onset 12:02:30) |
+| Thermal rise | M07 *Isolated thermal event*, critical at 12:02:20 (onset 12:02:00, at 30.6 °C), with forecast |
+| Multiple module heating | One *Multi-module heating (M04–M06)* alert, critical at 12:03:20 (onset 12:03:00) |
+| Sensor failure | M11 *Sensor dropout* data fault 12:02:30 → cleared 12:04:10; M03/M06 single dropouts logged as ignored |
+| Overvoltage | M09 *Over-voltage*, critical |
+| Internal short | M02 *Suspected internal short circuit*, one alert (not separate thermal + voltage) |
+| Thermal propagation | *Thermal propagation from M07* covering M06–M08 |
+| Whole-pack heating | One *Pack-wide temperature rise* alert |
+| Low SOC | *Low state of charge*, pack-level |
+| Stuck sensor | M08 *Stuck sensor*, data fault only |
+| Sensor spike | No alert; logged as ignored |
+| Comms loss | One *Communication loss* alert (not 12) |
+| Missing module | M05 *Sensor dropout* while rows are absent |
+| Heating with dropout | M04 thermal alert stays active through the dropout |
+| Corrupted values / messy format | No hazards; problems listed in the data-quality report |
