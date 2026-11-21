@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import type { Timeline } from '../../core';
 import { fmtTime } from '../format';
+import { spring } from '../motion';
 import { Icon } from './Icon';
 import { StatusBadge } from './StatusBadge';
 
@@ -63,15 +65,25 @@ export function EventLog({ timeline, cursor, sourceName }: { timeline: Timeline;
         <p className="muted pad">No events yet.</p>
       ) : (
         <ol className="log-list">
+          <AnimatePresence initial={false}>
           {events.map((e) => (
-            <li key={e.id} className={`log-${e.kind}`}>
+            <motion.li
+              key={e.id}
+              className={`log-${e.kind}`}
+              layout
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={spring}
+            >
               <span className="log-time">{fmtTime(e.time)}</span>
               <StatusBadge severity={e.severity} compact />
               <span className="log-kind">{KIND_LABEL[e.kind]}</span>
               <span className="log-msg">{e.message}</span>
               <span className="log-mods muted">{e.moduleIds.length > 4 ? `${e.moduleIds.length} modules` : e.moduleIds.join(', ')}</span>
-            </li>
+            </motion.li>
           ))}
+          </AnimatePresence>
         </ol>
       )}
     </section>

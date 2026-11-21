@@ -55,7 +55,9 @@ button, select, input { font: inherit; color: inherit; }
 }
 .btn .icon { flex: none; }
 .btn.icon { justify-content: center; }
-.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:hover:not(:disabled) { border-color: #3a4d60; background: #1d2934; }
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn { transition: transform 100ms ease-out, background 150ms, border-color 150ms; }
 .btn:disabled { opacity: 0.5; cursor: default; }
 .btn.primary { background: #ff7a1a; border-color: #ff7a1a; color: #1a0d03; font-weight: 600; }
 .btn.primary:hover:not(:disabled) { background: #ff8f3d; border-color: #ff8f3d; }
@@ -83,9 +85,14 @@ select { background: var(--surface-2); border: 1px solid var(--border); border-r
 .app { min-height: 100vh; display: flex; flex-direction: column; }
 .topbar {
   display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
-  padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--surface);
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  /* Translucent material: content scrolls underneath. */
+  background: rgb(18 26 35 / 0.72);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
   position: sticky; top: 0; z-index: 20;
 }
+@media (prefers-reduced-transparency: reduce) { .topbar { background: var(--surface); backdrop-filter: none; } }
 .brand { display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
 .topbar-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .source { display: flex; align-items: center; gap: 8px; }
@@ -273,3 +280,10 @@ select { background: var(--surface-2); border: 1px solid var(--border); border-r
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Shared motion keyframes (CSS-only pieces; React motion uses springs) ---------- */
+@keyframes l-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+.anum { display: inline-flex; align-items: baseline; gap: 0.25em; }
+.anum-unit { font-size: 0.8em; color: inherit; opacity: 0.85; }
+.alert-list { overflow-x: hidden; }
